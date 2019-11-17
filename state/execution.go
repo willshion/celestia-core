@@ -121,6 +121,16 @@ func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) e
 // It's the only function that needs to be called
 // from outside this package to process and commit an entire block.
 // It takes a blockID to avoid recomputing the parts hash.
+//
+// LAZY: we could either delete the few lines that trigger execution against the app, or,
+// create an app that doesn't do anything with the TXs (we might need an app anyways for
+// testing etc
+// The BlockExecutor is part of the BlockchainReactor. We could also replace the
+// default blockchain reactor with one that holds a modified BlockExecutor.
+//
+// Note: this does not only execute TXs (via the app) but also validates the block's
+// evidence (!) and does a bunch of early sanity checks (Block.ValidateBasic).
+// We only (?) do not need execBlockOnProxyApp.
 func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, block *types.Block) (State, error) {
 
 	if err := blockExec.ValidateBlock(state, block); err != nil {
@@ -128,6 +138,9 @@ func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, b
 	}
 
 	startTime := time.Now().UnixNano()
+	// LAZY: bundles abci app's BeginBlockSync, DeliverTxAsync, and EndBlockSync
+	//  - it's result is used to update the state
+	//  - abciResponses also contain validator updates
 	abciResponses, err := execBlockOnProxyApp(blockExec.logger, blockExec.proxyApp, block, blockExec.db)
 	endTime := time.Now().UnixNano()
 	blockExec.metrics.BlockProcessingTime.Observe(float64(endTime-startTime) / 1000000)
@@ -289,6 +302,7 @@ func execBlockOnProxyApp(
 	}
 
 	// Run txs of block.
+	// LAZY: TX execution delegated to abci app here:
 	for _, tx := range block.Txs {
 		proxyAppConn.DeliverTxAsync(abci.RequestDeliverTx{Tx: tx})
 		if err := proxyAppConn.Error(); err != nil {

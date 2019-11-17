@@ -33,6 +33,14 @@ const (
 )
 
 // Block defines the atomic unit of a Tendermint blockchain.
+// LAZY: add data availability related field (here and/or in the Header).
+// compare for instance:
+// https://github.com/LazyLedger/lazyledger-prototype/blob/fff0a594fec2631252401eddcb55b78eefb42e8d/probabilisticblock.go#L18-L22
+//
+// or the coded merkle tree related work:
+//
+// https://github.com/songzLi/coded_merkle_tree/tree/master/chain#block-blockrs
+// https://github.com/songzLi/coded_merkle_tree/tree/master/chain#block-header-block_headerrs
 type Block struct {
 	mtx        sync.Mutex
 	Header     `json:"header"`
@@ -44,6 +52,7 @@ type Block struct {
 // ValidateBasic performs basic validation that doesn't involve state data.
 // It checks the internal consistency of the block.
 // Further validation is done using state#ValidateBlock.
+// LAZY: As stated above this does not depend on the TX validity (Data field above).
 func (b *Block) ValidateBasic() error {
 	if b == nil {
 		return errors.New("nil block")
@@ -334,6 +343,7 @@ func MaxDataBytesUnknownEvidence(maxBytes int64, valsCount int) int64 {
 // - header.Hash()
 // - abci.Header
 // - /docs/spec/blockchain/blockchain.md
+// LAZY: add data availability proofs related fields (compare note on Block struct):
 type Header struct {
 	// basic block info
 	Version  version.Consensus `json:"version"`
@@ -348,7 +358,8 @@ type Header struct {
 
 	// hashes of block data
 	LastCommitHash cmn.HexBytes `json:"last_commit_hash"` // commit from validators from the last block
-	DataHash       cmn.HexBytes `json:"data_hash"`        // transactions
+	// LAZY: header contains the root hash of the merkle tree of the messages (see hash method for details):
+	DataHash cmn.HexBytes `json:"data_hash"` // transactions
 
 	// hashes from the app output from the prev block
 	ValidatorsHash     cmn.HexBytes `json:"validators_hash"`      // validators for the current block
@@ -395,6 +406,7 @@ func (h *Header) Hash() cmn.HexBytes {
 	if h == nil || len(h.ValidatorsHash) == 0 {
 		return nil
 	}
+	// LAZY: this also defines the Block hash
 	return merkle.SimpleHashFromByteSlices([][]byte{
 		cdcEncode(h.Version),
 		cdcEncode(h.ChainID),
@@ -780,6 +792,7 @@ type Data struct {
 	Txs Txs `json:"txs"`
 
 	// Volatile
+	// LAZY: hash of the messages
 	hash cmn.HexBytes
 }
 

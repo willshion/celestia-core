@@ -84,10 +84,19 @@ func (psh PartSetHeader) ValidateBasic() error {
 }
 
 //-------------------------------------
-
+// LAZY: This might be interesting in the context of LL, too:
+// - blocks are gossiped in the network split up into chunks
+// - from the spec:
+//  - Nodes gossip PartSet parts of the current round's proposer's proposed block.
+//  - A LibSwift inspired algorithm is used to quickly broadcast blocks across the gossip network.
+//
+// Probably not relevant for a LL-like prototype but might be interesting in the light of
+// data availability proofs too (recreate block from chunks without downloading all the data?
+// prob. not a good idea as this gossiping happens during consensus / too early).
 type PartSet struct {
 	total int
-	hash  []byte
+	// This can stay a simple merkle tree:
+	hash []byte
 
 	mtx           sync.Mutex
 	parts         []*Part
@@ -248,6 +257,9 @@ func NewPartSetReader(parts []*Part) *PartSetReader {
 	}
 }
 
+// This Reader can be used to recreate the whole block
+// See how the ProposalBlock is read using amino (via UnmarshalBinaryLengthPrefixedReader)
+// in state.go
 func (psr *PartSetReader) Read(p []byte) (n int, err error) {
 	readerLen := psr.reader.Len()
 	if readerLen >= len(p) {

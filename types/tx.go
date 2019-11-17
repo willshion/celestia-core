@@ -16,6 +16,11 @@ import (
 // Tx is an arbitrary byte array.
 // NOTE: Tx has no types at this level, so when wire encoded it's just length-prefixed.
 // Might we want types here ?
+//
+// LAZY: TXs also need a namespace in LL.
+// While this could be achieved leaving this a blob and letting the
+// (abci) application deal with the content of the TXs, we can't really do so
+// in LL as the DataHash field in the header needs to be namespaced.
 type Tx []byte
 
 // Hash computes the TMHASH hash of the wire encoded transaction.
@@ -29,6 +34,8 @@ func (tx Tx) String() string {
 }
 
 // Txs is a slice of Tx.
+// LAZY: Txs.Hash() is used to compute that DataHash in the header (merkle root of the list
+// messages/Txs).
 type Txs []Tx
 
 // Hash returns the Merkle root hash of the transaction hashes.
@@ -40,6 +47,19 @@ func (txs Txs) Hash() []byte {
 	for i := 0; i < len(txs); i++ {
 		txBzs[i] = txs[i].Hash()
 	}
+	// LAZY: This needs to be a "namespaced" merkle tree instead of a "simple merkle tree".
+	//
+	// from the lazyledger paper:
+	//
+	// each block header h_i contains the root mRoot_i of a Merkle tree of a
+	// list of messages M_i = (m^0_i , m^1_i , ...), such that given
+	// a function root(M) that returns the Merkle root of a list of messages M,
+	// then root(M_i) = mRoot_i.
+	// This is not an ordinary Merkle tree,
+	// but an ordered Merkle tree we refer to as a ‘namespaced’ Merkle tree [...]
+	//
+	// As a general note, it would be great if tendermint made it easy to swap the
+	// underlying merkle tree (or even sth. more general).
 	return merkle.SimpleHashFromByteSlices(txBzs)
 }
 
