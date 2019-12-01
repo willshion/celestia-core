@@ -23,9 +23,25 @@ import (
 // in LL as the DataHash field in the header needs to be namespaced.
 type Tx []byte
 
+//
+// Emulate LL messages: Namespace returns the namespace of a message
+// (of size namespaceSize).
+func (tx Tx) Namespace() []byte {
+	return tx[:namespaceSize]
+}
+
+// Emulate LL messages: Data returns the data of a message.
+func (tx Tx) Data() []byte {
+	return tx[namespaceSize:]
+}
+
 // Hash computes the TMHASH hash of the wire encoded transaction.
 func (tx Tx) Hash() []byte {
 	return tmhash.Sum(tx)
+}
+
+func (tx Tx) NamespacedString() string {
+	return fmt.Sprintf("Tx{namespace: %X, data: %X}", tx.Namespace(), tx.Data())
 }
 
 // String returns the hex-encoded transaction as a string.
@@ -36,6 +52,10 @@ func (tx Tx) String() string {
 // Txs is a slice of Tx.
 // LAZY: Txs.Hash() is used to compute that DataHash in the header (merkle root of the list
 // messages/Txs).
+//
+// Note: for a 1st LL prototype with as little changes as possible, we can
+// simply assume that a Tx is of the form ([namespaceSize]byte..., []data ...).
+// Hence we can always extract the namespace and the actual Tx.
 type Txs []Tx
 
 // Hash returns the Merkle root hash of the transaction hashes.
@@ -47,7 +67,9 @@ func (txs Txs) Hash() []byte {
 	for i := 0; i < len(txs); i++ {
 		txBzs[i] = txs[i].Hash()
 	}
-	// LAZY: This needs to be a "namespaced" merkle tree instead of a "simple merkle tree".
+	// LAZY: For the simplistic validity rules (section 4.1) this just
+	// needs to be a "namespaced" merkle tree instead of a "simple merkle tree".
+	//
 	//
 	// from the lazyledger paper:
 	//
@@ -58,8 +80,18 @@ func (txs Txs) Hash() []byte {
 	// This is not an ordinary Merkle tree,
 	// but an ordered Merkle tree we refer to as a ‘namespaced’ Merkle tree [...]
 	//
+	//
+	// LAZY: For the probability validity rule (section 4.2),
+	// we need to compute column and row roots.
+	//
 	// As a general note, it would be great if tendermint made it easy to swap the
 	// underlying merkle tree (or even sth. more general).
+	// Additionally, it would be good if tendermint would abstract away from the
+	// underlying block structure.
+	// Ideally, tendermint would rather just reach consensus on "something" instead of
+	// assuming the exact structure of what this something is. This opaque data on which
+	// consensus is reached could have validity rules. In the case of a block this could
+	// be the simple block validity rule.
 	return merkle.SimpleHashFromByteSlices(txBzs)
 }
 

@@ -280,7 +280,7 @@ func (mem *CListMempool) CheckTx(tx types.Tx, cb func(*abci.Response), txInfo Tx
 	if err = mem.proxyAppConn.Error(); err != nil {
 		return err
 	}
-	// LAZY: executing the (application specfic) checks on the Tx happens here (by the app):
+	// LAZY: executing the (application specific) checks on the Tx happens here (by the app):
 	reqRes := mem.proxyAppConn.CheckTxAsync(abci.RequestCheckTx{Tx: tx})
 	reqRes.SetCallback(mem.reqResCb(tx, txInfo.SenderID, txInfo.SenderP2PID, cb))
 

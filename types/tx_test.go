@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -186,5 +187,23 @@ func assertBadProof(t *testing.T, root []byte, bad []byte, good TxProof) {
 			// problem.
 			assert.NotEqual(t, proof.Proof.Total, good.Proof.Total, "bad: %#v\ngood: %#v", proof, good)
 		}
+	}
+}
+
+func TestTxNamespacedString(t *testing.T) {
+	tests := []struct {
+		name string
+		tx   Tx
+		want string
+	}{
+		{"valid message", Tx("randomNsAndSomeData"),
+			fmt.Sprintf("Tx{namespace: %X, data: %X}", []byte("randomNs"), []byte("AndSomeData"))},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.tx.NamespacedString(); got != tt.want {
+				t.Errorf("NamespacedString() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

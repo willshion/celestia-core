@@ -2,14 +2,22 @@ package types
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 
+	"github.com/LazyLedger/lazyledger-prototype"
+	"github.com/musalbas/rsmt2d"
+	"gitlab.com/NebulousLabs/merkletree"
+
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/flaghasher"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -177,6 +185,82 @@ func (b *Block) fillHeader() {
 	if b.EvidenceHash == nil {
 		b.EvidenceHash = b.Evidence.Hash()
 	}
+}
+
+func (b *Block) computeRoots() {
+	ndf := lazyledger.NewNamespaceDummyFlagger()
+	fh := flaghasher.New(ndf, sha256.New())
+	rowRoots := make([][]byte, b.squareWidth())
+	columnRoots := make([][]byte, b.squareWidth())
+	for i := 0; i < b.squareWidth(); i++ {
+		if i >= b.squareWidth()/2 {
+			fh.SetCodedMode(true)
+		}
+		rowTree := merkletree.New(fh)
+		columnTree := merkletree.New(fh)
+		rowData := b.eds().Row(uint(i))
+		columnData := b.eds().Column(uint(i))
+		for j := 0; j < b.squareWidth(); j++ {
+			if j >= b.squareWidth()/2 {
+				fh.SetCodedMode(true)
+			}
+			rowTree.Push(rowData[j])
+			columnTree.Push(columnData[j])
+		}
+		fh.SetCodedMode(false)
+
+		rowRoots[i] = rowTree.Root()
+		columnRoots[i] = columnTree.Root()
+	}
+	b.rowRoots = rowRoots
+	b.columnRoots = columnRoots
+}
+
+func (b *Block) GetOrComputeColumnRoots() [][]byte {
+	if b.columnRoots == nil {
+		b.computeRoots()
+	}
+
+	return b.columnRoots
+}
+
+func (b *Block) GetOrComputeRowRoots() [][]byte {
+	if b.rowRoots == nil {
+		b.computeRoots()
+	}
+
+	return b.rowRoots
+}
+
+func (b *Block) squareWidth() int {
+	return int(b.eds().Width())
+}
+
+func (b *Block) eds() *rsmt2d.ExtendedDataSquare {
+	if b.cachedEds == nil {
+		data := b.messagesBytes()
+		missingShares := int(math.Pow(math.Ceil(math.Sqrt(float64(len(data)))), 2)) - len(data)
+		paddingShare := make([]byte, b.messageSize)
+		for i := 0; i < b.Header.messageSize; i++ {
+			paddingShare[i] = 0xFF // this will ensure it will be treated like a redundancy share
+		}
+		for i := 0; i < missingShares; i++ {
+			freshPaddingShare := make([]byte, b.messageSize)
+			copy(freshPaddingShare, paddingShare)
+			data = append(data, freshPaddingShare)
+		}
+		b.cachedEds, _ = rsmt2d.ComputeExtendedDataSquare(data, rsmt2d.CodecRSGF8)
+	}
+
+	return b.cachedEds
+}
+
+func (b *Block) messagesBytes() [][]byte {
+	messagesBytes := make([][]byte, len(b.Data.Txs))
+	for index, message := range b.Data.Txs {
+		messagesBytes[index] = message.MarshalPadded(b.Header.messageSize)
+	}
+	return messagesBytes
 }
 
 // Hash computes and returns the block hash.
@@ -359,7 +443,13 @@ type Header struct {
 	// hashes of block data
 	LastCommitHash cmn.HexBytes `json:"last_commit_hash"` // commit from validators from the last block
 	// LAZY: header contains the root hash of the merkle tree of the messages (see hash method for details):
+	// TODO(LL): add similar method as in the ProbabilisticBlock.Digest (hash of rows and columns)
 	DataHash cmn.HexBytes `json:"data_hash"` // transactions
+	// TODO(LL): make fields public where it makes sense (prob. RowRoots & ColumnRoots
+	rowRoots    [][]byte
+	columnRoots [][]byte
+	cachedEds   *rsmt2d.ExtendedDataSquare
+	messageSize int
 
 	// hashes from the app output from the prev block
 	ValidatorsHash     cmn.HexBytes `json:"validators_hash"`      // validators for the current block
@@ -407,6 +497,7 @@ func (h *Header) Hash() cmn.HexBytes {
 		return nil
 	}
 	// LAZY: this also defines the Block hash
+	// LAZY: add new (public) header fields
 	return merkle.SimpleHashFromByteSlices([][]byte{
 		cdcEncode(h.Version),
 		cdcEncode(h.ChainID),
@@ -425,6 +516,21 @@ func (h *Header) Hash() cmn.HexBytes {
 		cdcEncode(h.EvidenceHash),
 		cdcEncode(h.ProposerAddress),
 	})
+}
+
+// TODO(LL): we should probably not need both, above Hash() method
+// and this Digest() one. Make Column / Row Roots exported and hash them in
+// using the method above.
+func (h *Header) Digest() []byte {
+	hasher := sha256.New()
+	hasher.Write(h.LastBlockID.Hash)
+	for _, root := range h.rowRoots {
+		hasher.Write(root)
+	}
+	for _, root := range h.columnRoots {
+		hasher.Write(root)
+	}
+	return hasher.Sum(nil)
 }
 
 // StringIndented returns a string representation of the header
@@ -825,6 +931,21 @@ func (data *Data) StringIndented(indent string) string {
 %s}#%v`,
 		indent, strings.Join(txStrings, "\n"+indent+"  "),
 		indent, data.hash)
+}
+
+func (tx Tx) MarshalPadded(messageSize int) []byte {
+	marshalled := append(tx.Namespace(), tx.Data()...)
+	marshalledSizeBytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(marshalledSizeBytes, uint16(len(marshalled)))
+
+	padding := make([]byte, messageSize-len(marshalled))
+	for i, _ := range padding {
+		padding[i] = 0x00
+	}
+	marshalled = append(marshalled, padding...)
+	marshalled[len(marshalled)-2] = marshalledSizeBytes[0]
+	marshalled[len(marshalled)-1] = marshalledSizeBytes[1]
+	return marshalled
 }
 
 //-----------------------------------------------------------------------------
