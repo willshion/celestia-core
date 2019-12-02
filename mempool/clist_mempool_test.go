@@ -185,8 +185,8 @@ func TestMempoolUpdate(t *testing.T) {
 
 	// 1. Adds valid txs to the cache
 	{
-		mempool.Update(1, []types.Tx{[]byte{0x01}}, abciResponses(1, abci.CodeTypeOK), nil, nil)
-		err := mempool.CheckTx([]byte{0x01}, nil, TxInfo{})
+		mempool.Update(1, []types.Tx{nameSpacedTx("nameSpace", []byte{0x01})}, abciResponses(1, abci.CodeTypeOK), nil, nil)
+		err := mempool.CheckTx(nameSpacedTx("nameSpace", []byte{0x01}), nil, TxInfo{})
 		if assert.Error(t, err) {
 			assert.Equal(t, ErrTxInCache, err)
 		}
@@ -194,22 +194,26 @@ func TestMempoolUpdate(t *testing.T) {
 
 	// 2. Removes valid txs from the mempool
 	{
-		err := mempool.CheckTx([]byte{0x02}, nil, TxInfo{})
+		err := mempool.CheckTx(nameSpacedTx("nameSpace", []byte{0x02}), nil, TxInfo{})
 		require.NoError(t, err)
-		mempool.Update(1, []types.Tx{[]byte{0x02}}, abciResponses(1, abci.CodeTypeOK), nil, nil)
+		mempool.Update(1, []types.Tx{nameSpacedTx("nameSpace", []byte{0x02})}, abciResponses(1, abci.CodeTypeOK), nil, nil)
 		assert.Zero(t, mempool.Size())
 	}
 
 	// 3. Removes invalid transactions from the cache and the mempool (if present)
 	{
-		err := mempool.CheckTx([]byte{0x03}, nil, TxInfo{})
+		err := mempool.CheckTx(nameSpacedTx("nameSpace", []byte{0x03}), nil, TxInfo{})
 		require.NoError(t, err)
-		mempool.Update(1, []types.Tx{[]byte{0x03}}, abciResponses(1, 1), nil, nil)
+		mempool.Update(1, []types.Tx{nameSpacedTx("nameSpace", []byte{0x03})}, abciResponses(1, 1), nil, nil)
 		assert.Zero(t, mempool.Size())
 
-		err = mempool.CheckTx([]byte{0x03}, nil, TxInfo{})
+		err = mempool.CheckTx(nameSpacedTx("nameSpace", []byte{0x03}), nil, TxInfo{})
 		assert.NoError(t, err)
 	}
+}
+
+func nameSpacedTx(namespace string, data []byte) types.Tx {
+	return append([]byte(namespace), data...)
 }
 
 func TestTxsAvailable(t *testing.T) {
@@ -277,6 +281,7 @@ func TestSerialReap(t *testing.T) {
 			// This will succeed
 			txBytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(txBytes, uint64(i))
+			txBytes = nameSpacedTx("CnterApp", txBytes)
 			err := mempool.CheckTx(txBytes, nil, TxInfo{})
 			_, cached := cacheMap[string(txBytes)]
 			if cached {
@@ -314,6 +319,7 @@ func TestSerialReap(t *testing.T) {
 		for i := start; i < end; i++ {
 			txBytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(txBytes, uint64(i))
+			txBytes = nameSpacedTx("CnterApp", txBytes)
 			res, err := appConnCon.DeliverTxSync(abci.RequestDeliverTx{Tx: txBytes})
 			if err != nil {
 				t.Errorf("Client error committing tx: %v", err)
@@ -393,12 +399,12 @@ func TestMempoolCloseWAL(t *testing.T) {
 	require.Equal(t, 1, len(m2), "expecting the wal match in")
 
 	// 5. Write some contents to the WAL
-	mempool.CheckTx(types.Tx([]byte("foo")), nil, TxInfo{})
+	mempool.CheckTx(nameSpacedTx("KVApName", []byte("foo")), nil, TxInfo{})
 	walFilepath := mempool.wal.Path
 	sum1 := checksumFile(walFilepath, t)
 
 	// 6. Sanity check to ensure that the written TX matches the expectation.
-	require.Equal(t, sum1, checksumIt([]byte("foo\n")), "foo with a newline should be written")
+	require.Equal(t, sum1, checksumIt(nameSpacedTx("KVApName", []byte("foo\n"))), "foo with a newline should be written")
 
 	// 7. Invoke CloseWAL() and ensure it discards the
 	// WAL thus any other write won't go through.
@@ -483,18 +489,18 @@ func TestMempoolTxsBytes(t *testing.T) {
 	assert.EqualValues(t, 0, mempool.TxsBytes())
 
 	// 2. len(tx) after CheckTx
-	err := mempool.CheckTx([]byte{0x01}, nil, TxInfo{})
+	err := mempool.CheckTx(nameSpacedTx("CnterApp", []byte{0x01}), nil, TxInfo{})
 	require.NoError(t, err)
-	assert.EqualValues(t, 1, mempool.TxsBytes())
+	assert.EqualValues(t, types.NamespaceSize+1, mempool.TxsBytes())
 
 	// 3. zero again after tx is removed by Update
-	mempool.Update(1, []types.Tx{[]byte{0x01}}, abciResponses(1, abci.CodeTypeOK), nil, nil)
+	mempool.Update(1, []types.Tx{nameSpacedTx("CnterApp", []byte{0x01})}, abciResponses(1, abci.CodeTypeOK), nil, nil)
 	assert.EqualValues(t, 0, mempool.TxsBytes())
 
 	// 4. zero after Flush
-	err = mempool.CheckTx([]byte{0x02, 0x03}, nil, TxInfo{})
+	err = mempool.CheckTx(nameSpacedTx("CnterApp", []byte{0x02, 0x03}), nil, TxInfo{})
 	require.NoError(t, err)
-	assert.EqualValues(t, 2, mempool.TxsBytes())
+	assert.EqualValues(t, types.NamespaceSize+2, mempool.TxsBytes())
 
 	mempool.Flush()
 	assert.EqualValues(t, 0, mempool.TxsBytes())
@@ -502,7 +508,7 @@ func TestMempoolTxsBytes(t *testing.T) {
 	// 5. ErrMempoolIsFull is returned when/if MaxTxsBytes limit is reached.
 	err = mempool.CheckTx([]byte{0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04}, nil, TxInfo{})
 	require.NoError(t, err)
-	err = mempool.CheckTx([]byte{0x05}, nil, TxInfo{})
+	err = mempool.CheckTx(nameSpacedTx("CnterApp", []byte{0x05}), nil, TxInfo{})
 	if assert.Error(t, err) {
 		assert.IsType(t, ErrMempoolIsFull{}, err)
 	}
@@ -515,10 +521,11 @@ func TestMempoolTxsBytes(t *testing.T) {
 
 	txBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(txBytes, uint64(0))
+	txBytes = nameSpacedTx("CnterApp", txBytes)
 
 	err = mempool.CheckTx(txBytes, nil, TxInfo{})
 	require.NoError(t, err)
-	assert.EqualValues(t, 8, mempool.TxsBytes())
+	assert.EqualValues(t, 8+types.NamespaceSize, mempool.TxsBytes())
 
 	appConnCon, _ := cc.NewABCIClient()
 	appConnCon.SetLogger(log.TestingLogger().With("module", "abci-client", "connection", "consensus"))

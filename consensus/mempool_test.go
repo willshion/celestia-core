@@ -99,6 +99,7 @@ func deliverTxsRange(cs *ConsensusState, start, end int) {
 	for i := start; i < end; i++ {
 		txBytes := make([]byte, 8)
 		binary.BigEndian.PutUint64(txBytes, uint64(i))
+		txBytes = append([]byte("CnterApp"), txBytes...)
 		err := assertMempool(cs.txNotifier).CheckTx(txBytes, nil, mempl.TxInfo{})
 		if err != nil {
 			panic(fmt.Sprintf("Error after CheckTx: %v", err))
@@ -139,6 +140,7 @@ func TestMempoolRmBadTx(t *testing.T) {
 
 	// increment the counter by 1
 	txBytes := make([]byte, 8)
+	txBytes = nameSpacedTx("CnterApp", txBytes)
 	binary.BigEndian.PutUint64(txBytes, uint64(0))
 
 	resDeliver := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -197,6 +199,10 @@ func TestMempoolRmBadTx(t *testing.T) {
 	}
 }
 
+func nameSpacedTx(nameSpace string, txData []byte) []byte {
+	return append([]byte(nameSpace), txData...)
+}
+
 // CounterApplication that maintains a mempool state and resets it upon commit
 type CounterApplication struct {
 	abci.BaseApplication
@@ -214,7 +220,7 @@ func (app *CounterApplication) Info(req abci.RequestInfo) abci.ResponseInfo {
 }
 
 func (app *CounterApplication) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	txValue := txAsUint64(req.Tx)
+	txValue := txAsUint64(req.Tx[types.NamespaceSize:])
 	if txValue != uint64(app.txCount) {
 		return abci.ResponseDeliverTx{
 			Code: code.CodeTypeBadNonce,
@@ -225,7 +231,7 @@ func (app *CounterApplication) DeliverTx(req abci.RequestDeliverTx) abci.Respons
 }
 
 func (app *CounterApplication) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	txValue := txAsUint64(req.Tx)
+	txValue := txAsUint64(req.Tx[types.NamespaceSize:])
 	if txValue != uint64(app.mempoolTxCount) {
 		return abci.ResponseCheckTx{
 			Code: code.CodeTypeBadNonce,

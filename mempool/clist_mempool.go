@@ -217,7 +217,6 @@ func (mem *CListMempool) CheckTx(tx types.Tx, cb func(*abci.Response), txInfo Tx
 	mem.proxyMtx.Lock()
 	// use defer to unlock mutex because application (*local client*) might panic
 	defer mem.proxyMtx.Unlock()
-
 	var (
 		memSize  = mem.Size()
 		txsBytes = mem.TxsBytes()
@@ -235,6 +234,10 @@ func (mem *CListMempool) CheckTx(tx types.Tx, cb func(*abci.Response), txInfo Tx
 	// relay it to peers.
 	if txSize > mem.config.MaxTxBytes {
 		return ErrTxTooLarge{mem.config.MaxTxBytes, txSize}
+	}
+	// check that the Tx at least is as long as the Namespace size:
+	if txSize <= types.NamespaceSize {
+		return ErrTxTooSmall{types.NamespaceSize, txSize}
 	}
 
 	if mem.preCheck != nil {

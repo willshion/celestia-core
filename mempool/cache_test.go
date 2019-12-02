@@ -57,20 +57,20 @@ func TestCacheAfterUpdate(t *testing.T) {
 	}
 	for tcIndex, tc := range tests {
 		for i := 0; i < tc.numTxsToCreate; i++ {
-			tx := types.Tx{byte(i)}
+			tx := nameSpacedTx("nameSpac", types.Tx{byte(i)})
 			err := mempool.CheckTx(tx, nil, TxInfo{})
 			require.NoError(t, err)
 		}
 
 		updateTxs := []types.Tx{}
 		for _, v := range tc.updateIndices {
-			tx := types.Tx{byte(v)}
+			tx := nameSpacedTx("nameSpac", types.Tx{byte(v)})
 			updateTxs = append(updateTxs, tx)
 		}
 		mempool.Update(int64(tcIndex), updateTxs, abciResponses(len(updateTxs), abci.CodeTypeOK), nil, nil)
 
 		for _, v := range tc.reAddIndices {
-			tx := types.Tx{byte(v)}
+			tx := nameSpacedTx("nameSpac", types.Tx{byte(v)})
 			_ = mempool.CheckTx(tx, nil, TxInfo{})
 		}
 
@@ -82,7 +82,7 @@ func TestCacheAfterUpdate(t *testing.T) {
 				"cache larger than expected on testcase %d", tcIndex)
 
 			nodeVal := node.Value.([sha256.Size]byte)
-			expectedBz := sha256.Sum256([]byte{byte(tc.txsInCache[len(tc.txsInCache)-counter-1])})
+			expectedBz := sha256.Sum256(nameSpacedTx("nameSpac", []byte{byte(tc.txsInCache[len(tc.txsInCache)-counter-1])}))
 			// Reference for reading the errors:
 			// >>> sha256('\x00').hexdigest()
 			// '6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d'

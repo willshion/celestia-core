@@ -17,6 +17,14 @@ type ErrTxTooLarge struct {
 	actual int
 }
 
+type ErrTxTooSmall struct {
+	min    int
+	actual int
+}
+
+func (e ErrTxTooSmall) Error() string {
+	return fmt.Sprintf("Tx too small. Namespace size is %d, but got %d", e.min, e.actual)
+}
 func (e ErrTxTooLarge) Error() string {
 	return fmt.Sprintf("Tx too large. Max size is %d, but got %d", e.max, e.actual)
 }

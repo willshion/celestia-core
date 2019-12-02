@@ -104,7 +104,7 @@ func sendTxs(ctx context.Context, cs *ConsensusState) {
 		case <-ctx.Done():
 			return
 		default:
-			tx := []byte{byte(i)}
+			tx := append([]byte("nameSpace"), byte(i))
 			assertMempool(cs.txNotifier).CheckTx(tx, nil, mempl.TxInfo{})
 			i++
 		}

@@ -1,12 +1,16 @@
 package counter
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 
 	"github.com/tendermint/tendermint/abci/example/code"
 	"github.com/tendermint/tendermint/abci/types"
+	tmTypes "github.com/tendermint/tendermint/types"
 )
+
+var NameSpace = []byte("CnterApp")
 
 type CounterApplication struct {
 	types.BaseApplication
@@ -44,13 +48,18 @@ func (app *CounterApplication) SetOption(req types.RequestSetOption) types.Respo
 
 func (app *CounterApplication) DeliverTx(req types.RequestDeliverTx) types.ResponseDeliverTx {
 	if app.serial {
-		if len(req.Tx) > 8 {
+		if len(req.Tx) > 8+tmTypes.NamespaceSize {
 			return types.ResponseDeliverTx{
 				Code: code.CodeTypeEncodingError,
 				Log:  fmt.Sprintf("Max tx size is 8 bytes, got %d", len(req.Tx))}
 		}
+		if !bytes.Equal(req.Tx[:tmTypes.NamespaceSize], NameSpace) {
+			return types.ResponseDeliverTx{
+				Code: code.CodeTypeUnknownError,
+				Log:  fmt.Sprintf("Wrong namespace expected %X, got %X", NameSpace, req.Tx[:tmTypes.NamespaceSize])}
+		}
 		tx8 := make([]byte, 8)
-		copy(tx8[len(tx8)-len(req.Tx):], req.Tx)
+		copy(tx8[len(tx8)-len(req.Tx[tmTypes.NamespaceSize:]):], req.Tx[tmTypes.NamespaceSize:])
 		txValue := binary.BigEndian.Uint64(tx8)
 		if txValue != uint64(app.txCount) {
 			return types.ResponseDeliverTx{
@@ -64,13 +73,13 @@ func (app *CounterApplication) DeliverTx(req types.RequestDeliverTx) types.Respo
 
 func (app *CounterApplication) CheckTx(req types.RequestCheckTx) types.ResponseCheckTx {
 	if app.serial {
-		if len(req.Tx) > 8 {
+		if len(req.Tx) > 8+tmTypes.NamespaceSize {
 			return types.ResponseCheckTx{
 				Code: code.CodeTypeEncodingError,
 				Log:  fmt.Sprintf("Max tx size is 8 bytes, got %d", len(req.Tx))}
 		}
 		tx8 := make([]byte, 8)
-		copy(tx8[len(tx8)-len(req.Tx):], req.Tx)
+		copy(tx8[len(tx8)-len(req.Tx[tmTypes.NamespaceSize:]):], req.Tx[tmTypes.NamespaceSize:])
 		txValue := binary.BigEndian.Uint64(tx8)
 		if txValue < uint64(app.txCount) {
 			return types.ResponseCheckTx{

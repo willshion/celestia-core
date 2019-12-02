@@ -25,14 +25,14 @@ type Tx []byte
 
 //
 // Emulate LL messages: Namespace returns the namespace of a message
-// (of size namespaceSize).
+// (of size NamespaceSize).
 func (tx Tx) Namespace() []byte {
-	return tx[:namespaceSize]
+	return tx[:NamespaceSize]
 }
 
 // Emulate LL messages: Data returns the data of a message.
 func (tx Tx) Data() []byte {
-	return tx[namespaceSize:]
+	return tx[NamespaceSize:]
 }
 
 // Hash computes the TMHASH hash of the wire encoded transaction.
@@ -54,7 +54,7 @@ func (tx Tx) String() string {
 // messages/Txs).
 //
 // Note: for a 1st LL prototype with as little changes as possible, we can
-// simply assume that a Tx is of the form ([namespaceSize]byte..., []data ...).
+// simply assume that a Tx is of the form ([NamespaceSize]byte..., []data ...).
 // Hence we can always extract the namespace and the actual Tx.
 type Txs []Tx
 
