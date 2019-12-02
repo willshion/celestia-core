@@ -28,17 +28,19 @@ message Header {
   // hashes of block data
   bytes LastCommitHash = 8; // commit from validators from the last block
   bytes DataHash = 9; // transactions
+  repeated bytes RowRoots = 10; // row roots of 2D Reed-Solomon Encoded Merkle tree
+  repeated bytes ColumnRoots = 11; // columns roots of 2D Reed-Solomon Encoded Merkle tree
 
   // hashes from the app output from the prev block
-  bytes ValidatorsHash = 10; // validators for the current block
-  bytes NextValidatorsHash = 11; // validators for the next block
-  bytes ConsensusHash = 12; // consensus params for current block
-  bytes AppHash = 13; // state after txs from the previous block
-  bytes LastResultsHash = 14; // root hash of all results from the txs from the previous block
+  bytes ValidatorsHash = 12; // validators for the current block
+  bytes NextValidatorsHash = 13; // validators for the next block
+  bytes ConsensusHash = 14; // consensus params for current block
+  bytes AppHash = 15; // state after txs from the previous block
+  bytes LastResultsHash = 16; // root hash of all results from the txs from the previous block
 
   // consensus info
-  bytes EvidenceHash = 15; // evidence included in the block
-  bytes ProposerAddress = 16; // original proposer of the block
+  bytes EvidenceHash = 17; // evidence included in the block
+  bytes ProposerAddress = 18; // original proposer of the block
 }
 
 message Version {

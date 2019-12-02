@@ -26,7 +26,7 @@ import (
 
 const (
 	// MaxHeaderBytes is a maximum header size (including amino overhead).
-	MaxHeaderBytes int64 = 653
+	MaxHeaderBytes int64 = 655
 
 	// MaxAminoOverheadForBlock - maximum amino overhead to encode a block (up to
 	// MaxBlockSizeBytes in size) not including it's parts except Data.
