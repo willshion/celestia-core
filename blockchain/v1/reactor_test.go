@@ -414,7 +414,7 @@ func TestBcStatusResponseMessageValidateBasic(t *testing.T) {
 
 func makeTxs(height int64) (txs []types.Tx) {
 	for i := 0; i < 10; i++ {
-		txs = append(txs, types.Tx([]byte{byte(height), byte(i)}))
+		txs = append(txs, types.Tx(append([]byte("namespac"), []byte{byte(height), byte(i)}...)))
 	}
 	return txs
 }

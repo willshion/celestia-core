@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestBlockAddEvidence(t *testing.T) {
-	txs := []Tx{Tx("foo"), Tx("bar")}
+	txs := []Tx{Tx("nameSpacFoo"), Tx("nameSpa2bar")}
 	lastID := makeBlockIDRandom()
 	h := int64(3)
 
@@ -50,7 +50,7 @@ func TestBlockAddEvidence(t *testing.T) {
 func TestBlockValidateBasic(t *testing.T) {
 	require.Error(t, (*Block)(nil).ValidateBasic())
 
-	txs := []Tx{Tx("foo"), Tx("bar")}
+	txs := []Tx{Tx("nameSpacedFoo"), Tx("nameSpacedBar")}
 	lastID := makeBlockIDRandom()
 	h := int64(3)
 
@@ -259,6 +259,8 @@ func TestHeaderHash(t *testing.T) {
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
+			RowRoots:           dummyRoots(2),
+			ColumnRoots:        dummyRoots(2),
 			ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
 			NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
 			ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
@@ -266,7 +268,7 @@ func TestHeaderHash(t *testing.T) {
 			LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 			EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 			ProposerAddress:    crypto.AddressHash([]byte("proposer_address")),
-		}, hexBytesFromString("A37A7A69D89D3A66D599B0914A53F959EFE490EE9B449C95852F6FB331D58D07")},
+		}, hexBytesFromString("022F9049388124D513862E991A896F439C87107963F395FA75C2CF6DF194A367")},
 		{"nil header yields nil", nil, nil},
 		{"nil ValidatorsHash yields nil", &Header{
 			Version:            version.Consensus{Block: 1, App: 2},
@@ -278,6 +280,8 @@ func TestHeaderHash(t *testing.T) {
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
+			RowRoots:           dummyRoots(2),
+			ColumnRoots:        dummyRoots(2),
 			ValidatorsHash:     nil,
 			NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
 			ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
@@ -311,6 +315,14 @@ func TestHeaderHash(t *testing.T) {
 			}
 		})
 	}
+}
+
+func dummyRoots(size int) [][]byte {
+	res := make([][]byte, size)
+	for i := 0; i < size; i++ {
+		res[i] = []byte("dummyRowOrColumData" + string(i))
+	}
+	return res
 }
 
 func TestMaxHeaderBytes(t *testing.T) {

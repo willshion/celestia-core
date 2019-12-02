@@ -185,9 +185,16 @@ func (b *Block) fillHeader() {
 	if b.EvidenceHash == nil {
 		b.EvidenceHash = b.Evidence.Hash()
 	}
+	// TODO(LL): make this configurable ...
+	b.messageSize = DefaultMessageSize
+	// TODO(LL): computeRoots currently fails when no Txs
+	if len(b.Data.Txs) != 0 && (b.ColumnRoots == nil || b.RowRoots == nil) {
+		b.computeRoots()
+	}
 }
 
 func (b *Block) computeRoots() {
+	// TODO(LL): make sure this works when there are no Txs!
 	ndf := lazyledger.NewNamespaceDummyFlagger()
 	fh := flaghasher.New(ndf, sha256.New())
 	rowRoots := make([][]byte, b.squareWidth())
@@ -212,24 +219,24 @@ func (b *Block) computeRoots() {
 		rowRoots[i] = rowTree.Root()
 		columnRoots[i] = columnTree.Root()
 	}
-	b.rowRoots = rowRoots
-	b.columnRoots = columnRoots
+	b.RowRoots = rowRoots
+	b.ColumnRoots = columnRoots
 }
 
 func (b *Block) GetOrComputeColumnRoots() [][]byte {
-	if b.columnRoots == nil {
+	if b.ColumnRoots == nil {
 		b.computeRoots()
 	}
 
-	return b.columnRoots
+	return b.ColumnRoots
 }
 
 func (b *Block) GetOrComputeRowRoots() [][]byte {
-	if b.rowRoots == nil {
+	if b.RowRoots == nil {
 		b.computeRoots()
 	}
 
-	return b.rowRoots
+	return b.RowRoots
 }
 
 func (b *Block) squareWidth() int {
@@ -446,8 +453,8 @@ type Header struct {
 	// TODO(LL): add similar method as in the ProbabilisticBlock.Digest (hash of rows and columns)
 	DataHash cmn.HexBytes `json:"data_hash"` // transactions
 	// TODO(LL): make fields public where it makes sense (prob. RowRoots & ColumnRoots
-	rowRoots    [][]byte
-	columnRoots [][]byte
+	RowRoots    [][]byte
+	ColumnRoots [][]byte
 	cachedEds   *rsmt2d.ExtendedDataSquare
 	messageSize int
 
@@ -473,6 +480,7 @@ func (h *Header) Populate(
 	consensusHash, appHash, lastResultsHash []byte,
 	proposerAddress Address,
 ) {
+	h.messageSize = DefaultMessageSize
 	h.Version = version
 	h.ChainID = chainID
 	h.Time = timestamp
@@ -508,6 +516,8 @@ func (h *Header) Hash() cmn.HexBytes {
 		cdcEncode(h.LastBlockID),
 		cdcEncode(h.LastCommitHash),
 		cdcEncode(h.DataHash),
+		cdcEncode(h.RowRoots),
+		cdcEncode(h.ColumnRoots),
 		cdcEncode(h.ValidatorsHash),
 		cdcEncode(h.NextValidatorsHash),
 		cdcEncode(h.ConsensusHash),
@@ -524,10 +534,10 @@ func (h *Header) Hash() cmn.HexBytes {
 func (h *Header) Digest() []byte {
 	hasher := sha256.New()
 	hasher.Write(h.LastBlockID.Hash)
-	for _, root := range h.rowRoots {
+	for _, root := range h.RowRoots {
 		hasher.Write(root)
 	}
-	for _, root := range h.columnRoots {
+	for _, root := range h.ColumnRoots {
 		hasher.Write(root)
 	}
 	return hasher.Sum(nil)

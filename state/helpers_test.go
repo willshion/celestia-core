@@ -90,7 +90,8 @@ func makeValidCommit(
 // make some bogus txs
 func makeTxs(height int64) (txs []types.Tx) {
 	for i := 0; i < nTxsPerBlock; i++ {
-		txs = append(txs, types.Tx([]byte{byte(height), byte(i)}))
+		// dummy namespace
+		txs = append(txs, types.Tx([]byte{110, 97, 109, 101, 83, 112, 97, 99, byte(height), byte(i)}))
 	}
 	return txs
 }

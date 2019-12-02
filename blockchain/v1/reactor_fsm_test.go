@@ -133,7 +133,7 @@ func sMakeRequestsEvErrored(current, expected string,
 }
 
 func sBlockRespEv(current, expected string, peerID p2p.ID, height int64, prevBlocks []int64) fsmStepTestValues {
-	txs := []types.Tx{types.Tx("foo"), types.Tx("bar")}
+	txs := []types.Tx{types.Tx("namespacFoo"), types.Tx("namespacBar")}
 	return fsmStepTestValues{
 		currentState: current,
 		event:        blockResponseEv,
@@ -149,7 +149,7 @@ func sBlockRespEv(current, expected string, peerID p2p.ID, height int64, prevBlo
 
 func sBlockRespEvErrored(current, expected string,
 	peerID p2p.ID, height int64, prevBlocks []int64, wantErr error, peersRemoved []p2p.ID) fsmStepTestValues {
-	txs := []types.Tx{types.Tx("foo"), types.Tx("bar")}
+	txs := []types.Tx{types.Tx("nameSpacfoo"), types.Tx("nameSpacbar")}
 
 	return fsmStepTestValues{
 		currentState: current,

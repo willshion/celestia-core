@@ -264,7 +264,7 @@ func TestCreateProposalBlock(t *testing.T) {
 
 	// fill the mempool with more txs
 	// than can fit in a block
-	txLength := 1000
+	txLength := 512
 	for i := 0; i < maxBytes/txLength; i++ {
 		tx := cmn.RandBytes(txLength)
 		err := mempool.CheckTx(tx, nil, mempl.TxInfo{})

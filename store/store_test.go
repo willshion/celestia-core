@@ -35,7 +35,7 @@ func makeTestCommit(height int64, timestamp time.Time) *types.Commit {
 
 func makeTxs(height int64) (txs []types.Tx) {
 	for i := 0; i < 10; i++ {
-		txs = append(txs, types.Tx([]byte{byte(height), byte(i)}))
+		txs = append(txs, types.Tx([]byte{110, 97, 109, 101, 83, 112, 97, 99, byte(height), byte(i)}))
 	}
 	return txs
 }

@@ -63,7 +63,7 @@ func makeBlockPool(bcr *testBcR, height int64, peers []BpPeer, blocks map[int64]
 	bPool := NewBlockPool(height, bcr)
 	bPool.SetLogger(bcr.logger)
 
-	txs := []types.Tx{types.Tx("foo"), types.Tx("bar")}
+	txs := []types.Tx{types.Tx("nameSpacFoo"), types.Tx("namespacBar")}
 
 	var maxH int64
 	for _, p := range peers {
@@ -354,7 +354,7 @@ func TestBlockPoolSendRequestBatch(t *testing.T) {
 
 func TestBlockPoolAddBlock(t *testing.T) {
 	testBcR := newTestBcR()
-	txs := []types.Tx{types.Tx("foo"), types.Tx("bar")}
+	txs := []types.Tx{types.Tx("nameSpacFoo"), types.Tx("namespacBar")}
 
 	type args struct {
 		peerID    p2p.ID
