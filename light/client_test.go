@@ -10,12 +10,12 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	"github.com/lazyledger/lazyledger-core/light"
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	mockp "github.com/lazyledger/lazyledger-core/light/provider/mock"
-	dbs "github.com/lazyledger/lazyledger-core/light/store/db"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/light"
+	"github.com/tendermint/tendermint/light/provider"
+	mockp "github.com/tendermint/tendermint/light/provider/mock"
+	dbs "github.com/tendermint/tendermint/light/store/db"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (

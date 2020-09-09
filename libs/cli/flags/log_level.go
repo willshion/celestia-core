@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (

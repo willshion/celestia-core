@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 // Provider provides information for the light client to sync (verification

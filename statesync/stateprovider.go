@@ -7,17 +7,17 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
-	"github.com/lazyledger/lazyledger-core/light"
-	lightprovider "github.com/lazyledger/lazyledger-core/light/provider"
-	lighthttp "github.com/lazyledger/lazyledger-core/light/provider/http"
-	lightrpc "github.com/lazyledger/lazyledger-core/light/rpc"
-	lightdb "github.com/lazyledger/lazyledger-core/light/store/db"
-	tmstate "github.com/lazyledger/lazyledger-core/proto/tendermint/state"
-	rpchttp "github.com/lazyledger/lazyledger-core/rpc/client/http"
-	sm "github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmsync "github.com/tendermint/tendermint/libs/sync"
+	"github.com/tendermint/tendermint/light"
+	lightprovider "github.com/tendermint/tendermint/light/provider"
+	lighthttp "github.com/tendermint/tendermint/light/provider/http"
+	lightrpc "github.com/tendermint/tendermint/light/rpc"
+	lightdb "github.com/tendermint/tendermint/light/store/db"
+	tmstate "github.com/tendermint/tendermint/proto/tendermint/state"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 //go:generate mockery --case underscore --name StateProvider

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/lazyledger/lazyledger-core/abci/example/kvstore"
-	rpchttp "github.com/lazyledger/lazyledger-core/rpc/client/http"
-	ctypes "github.com/lazyledger/lazyledger-core/rpc/core/types"
-	rpctest "github.com/lazyledger/lazyledger-core/rpc/test"
+	"github.com/tendermint/tendermint/abci/example/kvstore"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctest "github.com/tendermint/tendermint/rpc/test"
 )
 
 func ExampleHTTP_simple() {

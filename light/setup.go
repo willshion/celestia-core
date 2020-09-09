@@ -3,9 +3,9 @@ package light
 import (
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	"github.com/lazyledger/lazyledger-core/light/provider/http"
-	"github.com/lazyledger/lazyledger-core/light/store"
+	"github.com/tendermint/tendermint/light/provider"
+	"github.com/tendermint/tendermint/light/provider/http"
+	"github.com/tendermint/tendermint/light/store"
 )
 
 // NewHTTPClient initiates an instance of a light client using HTTP addresses

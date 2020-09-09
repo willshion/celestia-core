@@ -3,9 +3,9 @@ package txindex
 import (
 	"context"
 
-	"github.com/lazyledger/lazyledger-core/libs/service"
+	"github.com/tendermint/tendermint/libs/service"
 
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	tmrand "github.com/lazyledger/lazyledger-core/libs/rand"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 )
 
 /* AutoFile usage

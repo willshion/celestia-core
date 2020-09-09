@@ -3,8 +3,8 @@ package v2
 import (
 	"fmt"
 
-	"github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 type processorContext interface {

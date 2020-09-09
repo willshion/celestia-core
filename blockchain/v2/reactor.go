@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/behaviour"
-	bc "github.com/lazyledger/lazyledger-core/blockchain"
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
-	"github.com/lazyledger/lazyledger-core/p2p"
-	bcproto "github.com/lazyledger/lazyledger-core/proto/tendermint/blockchain"
-	"github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/behaviour"
+	bc "github.com/tendermint/tendermint/blockchain"
+	"github.com/tendermint/tendermint/libs/log"
+	tmsync "github.com/tendermint/tendermint/libs/sync"
+	"github.com/tendermint/tendermint/p2p"
+	bcproto "github.com/tendermint/tendermint/proto/tendermint/blockchain"
+	"github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (

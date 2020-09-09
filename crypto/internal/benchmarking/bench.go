@@ -4,7 +4,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/lazyledger/lazyledger-core/crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // The code in this file is adapted from agl/ed25519.

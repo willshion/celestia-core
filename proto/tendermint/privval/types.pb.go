@@ -6,8 +6,8 @@ package privval
 import (
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
-	crypto "github.com/lazyledger/lazyledger-core/proto/tendermint/crypto"
-	types "github.com/lazyledger/lazyledger-core/proto/tendermint/types"
+	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	types "github.com/tendermint/tendermint/proto/tendermint/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	tmflags "github.com/lazyledger/lazyledger-core/libs/cli/flags"
-	"github.com/lazyledger/lazyledger-core/libs/log"
+	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (

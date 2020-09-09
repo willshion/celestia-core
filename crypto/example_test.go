@@ -17,7 +17,7 @@ package crypto_test
 import (
 	"fmt"
 
-	"github.com/lazyledger/lazyledger-core/crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 func ExampleSha256() {

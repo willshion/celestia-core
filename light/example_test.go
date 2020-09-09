@@ -10,13 +10,13 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/abci/example/kvstore"
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	"github.com/lazyledger/lazyledger-core/light"
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	httpp "github.com/lazyledger/lazyledger-core/light/provider/http"
-	dbs "github.com/lazyledger/lazyledger-core/light/store/db"
-	rpctest "github.com/lazyledger/lazyledger-core/rpc/test"
+	"github.com/tendermint/tendermint/abci/example/kvstore"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/light"
+	"github.com/tendermint/tendermint/light/provider"
+	httpp "github.com/tendermint/tendermint/light/provider/http"
+	dbs "github.com/tendermint/tendermint/light/store/db"
+	rpctest "github.com/tendermint/tendermint/rpc/test"
 )
 
 // Automatically getting new headers and verifying them.

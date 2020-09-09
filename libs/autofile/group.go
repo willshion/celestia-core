@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/libs/service"
+	"github.com/tendermint/tendermint/libs/service"
 )
 
 const (

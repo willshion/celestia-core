@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestLoggerLogsItsErrors(t *testing.T) {

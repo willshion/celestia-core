@@ -3,8 +3,8 @@ package evidence
 import (
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 //go:generate mockery --case underscore --name BlockStore

@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	abci "github.com/lazyledger/lazyledger-core/abci/types"
-	"github.com/lazyledger/lazyledger-core/version"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/version"
 )
 
 // RequestInfo contains all the information for sending

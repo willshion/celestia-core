@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (

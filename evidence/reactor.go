@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	clist "github.com/lazyledger/lazyledger-core/libs/clist"
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	"github.com/lazyledger/lazyledger-core/p2p"
-	ep "github.com/lazyledger/lazyledger-core/proto/tendermint/evidence"
-	tmproto "github.com/lazyledger/lazyledger-core/proto/tendermint/types"
-	"github.com/lazyledger/lazyledger-core/types"
+	clist "github.com/tendermint/tendermint/libs/clist"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
+	ep "github.com/tendermint/tendermint/proto/tendermint/evidence"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (

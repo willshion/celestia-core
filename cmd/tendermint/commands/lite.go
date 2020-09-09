@@ -12,15 +12,15 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	tmmath "github.com/lazyledger/lazyledger-core/libs/math"
-	tmos "github.com/lazyledger/lazyledger-core/libs/os"
-	"github.com/lazyledger/lazyledger-core/light"
-	lproxy "github.com/lazyledger/lazyledger-core/light/proxy"
-	lrpc "github.com/lazyledger/lazyledger-core/light/rpc"
-	dbs "github.com/lazyledger/lazyledger-core/light/store/db"
-	rpchttp "github.com/lazyledger/lazyledger-core/rpc/client/http"
-	rpcserver "github.com/lazyledger/lazyledger-core/rpc/jsonrpc/server"
+	"github.com/tendermint/tendermint/libs/log"
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/light"
+	lproxy "github.com/tendermint/tendermint/light/proxy"
+	lrpc "github.com/tendermint/tendermint/light/rpc"
+	dbs "github.com/tendermint/tendermint/light/store/db"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	rpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 )
 
 // LightCmd represents the base command when called without any subcommands
@@ -36,7 +36,7 @@ that, it will present the same interface as a full Tendermint node.
 Furthermore to the chainID, a fresh instance of a light client will
 need a primary RPC address, a trusted hash and height and witness RPC addresses
 (if not using sequential verification). To restart the node, thereafter
-only the chainID is required. 
+only the chainID is required.
 
 `,
 	RunE: runProxy,

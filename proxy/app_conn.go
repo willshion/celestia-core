@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	abcicli "github.com/lazyledger/lazyledger-core/abci/client"
-	"github.com/lazyledger/lazyledger-core/abci/types"
+	abcicli "github.com/tendermint/tendermint/abci/client"
+	"github.com/tendermint/tendermint/abci/types"
 )
 
 //go:generate mockery --case underscore --name AppConnConsensus|AppConnMempool|AppConnQuery|AppConnSnapshot

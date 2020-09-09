@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	abcicli "github.com/lazyledger/lazyledger-core/abci/client"
+	abcicli "github.com/tendermint/tendermint/abci/client"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -5,9 +5,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/lazyledger/lazyledger-core/abci/types"
-	tmnet "github.com/lazyledger/lazyledger-core/libs/net"
-	"github.com/lazyledger/lazyledger-core/libs/service"
+	"github.com/tendermint/tendermint/abci/types"
+	tmnet "github.com/tendermint/tendermint/libs/net"
+	"github.com/tendermint/tendermint/libs/service"
 )
 
 type GRPCServer struct {

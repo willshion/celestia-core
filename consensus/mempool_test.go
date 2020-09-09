@@ -11,11 +11,11 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/lazyledger/lazyledger-core/abci/example/code"
-	abci "github.com/lazyledger/lazyledger-core/abci/types"
-	mempl "github.com/lazyledger/lazyledger-core/mempool"
-	sm "github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/abci/example/code"
+	abci "github.com/tendermint/tendermint/abci/types"
+	mempl "github.com/tendermint/tendermint/mempool"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 // for testing

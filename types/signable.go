@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/lazyledger/lazyledger-core/crypto/ed25519"
-	tmmath "github.com/lazyledger/lazyledger-core/libs/math"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmmath "github.com/tendermint/tendermint/libs/math"
 )
 
 var (

@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/config"
-	"github.com/lazyledger/lazyledger-core/libs/cmap"
-	"github.com/lazyledger/lazyledger-core/libs/rand"
-	"github.com/lazyledger/lazyledger-core/libs/service"
-	"github.com/lazyledger/lazyledger-core/p2p/conn"
+	"github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/cmap"
+	"github.com/tendermint/tendermint/libs/rand"
+	"github.com/tendermint/tendermint/libs/service"
+	"github.com/tendermint/tendermint/p2p/conn"
 )
 
 const (

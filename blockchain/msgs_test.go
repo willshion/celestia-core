@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	bcproto "github.com/lazyledger/lazyledger-core/proto/tendermint/blockchain"
-	"github.com/lazyledger/lazyledger-core/types"
+	bcproto "github.com/tendermint/tendermint/proto/tendermint/blockchain"
+	"github.com/tendermint/tendermint/types"
 )
 
 func TestBcBlockRequestMessageValidateBasic(t *testing.T) {

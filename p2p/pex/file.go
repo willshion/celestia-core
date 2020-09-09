@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lazyledger/lazyledger-core/libs/tempfile"
+	"github.com/tendermint/tendermint/libs/tempfile"
 )
 
 /* Loading & Saving */

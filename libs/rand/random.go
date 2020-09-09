@@ -5,7 +5,7 @@ import (
 	mrand "math/rand"
 	"time"
 
-	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
+	tmsync "github.com/tendermint/tendermint/libs/sync"
 )
 
 const (

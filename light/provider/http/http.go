@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	rpcclient "github.com/lazyledger/lazyledger-core/rpc/client"
-	rpchttp "github.com/lazyledger/lazyledger-core/rpc/client/http"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/light/provider"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/tendermint/tendermint/types"
 )
 
 // This is very brittle, see: https://github.com/tendermint/tendermint/issues/4740

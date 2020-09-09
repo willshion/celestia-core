@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lazyledger/lazyledger-core/crypto/merkle"
-	tmmath "github.com/lazyledger/lazyledger-core/libs/math"
-	tmproto "github.com/lazyledger/lazyledger-core/proto/tendermint/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (

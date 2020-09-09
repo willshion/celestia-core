@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/lazyledger/lazyledger-core/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 func defaultProofRuntime() *merkle.ProofRuntime {

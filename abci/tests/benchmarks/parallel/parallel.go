@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/lazyledger/lazyledger-core/abci/types"
-	tmnet "github.com/lazyledger/lazyledger-core/libs/net"
+	"github.com/tendermint/tendermint/abci/types"
+	tmnet "github.com/tendermint/tendermint/libs/net"
 )
 
 func main() {

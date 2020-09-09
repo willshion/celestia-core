@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"sort"
 
-	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
-	"github.com/lazyledger/lazyledger-core/p2p"
+	tmsync "github.com/tendermint/tendermint/libs/sync"
+	"github.com/tendermint/tendermint/p2p"
 )
 
 // snapshotKey is a snapshot key used for lookups.

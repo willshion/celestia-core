@@ -3,8 +3,8 @@ package mock
 import (
 	"errors"
 
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/light/provider"
+	"github.com/tendermint/tendermint/types"
 )
 
 var errNoResp = errors.New("no response from provider")

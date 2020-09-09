@@ -11,13 +11,13 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	auto "github.com/lazyledger/lazyledger-core/libs/autofile"
-	tmjson "github.com/lazyledger/lazyledger-core/libs/json"
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	tmos "github.com/lazyledger/lazyledger-core/libs/os"
-	"github.com/lazyledger/lazyledger-core/libs/service"
-	tmcons "github.com/lazyledger/lazyledger-core/proto/tendermint/consensus"
-	tmtime "github.com/lazyledger/lazyledger-core/types/time"
+	auto "github.com/tendermint/tendermint/libs/autofile"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/libs/service"
+	tmcons "github.com/tendermint/tendermint/proto/tendermint/consensus"
+	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 const (

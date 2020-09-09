@@ -3,8 +3,8 @@ package evidence
 import (
 	"fmt"
 
-	sm "github.com/lazyledger/lazyledger-core/state"
-	"github.com/lazyledger/lazyledger-core/types"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 // VerifyEvidence verifies the evidence fully by checking:

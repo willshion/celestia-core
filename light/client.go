@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
-	tmmath "github.com/lazyledger/lazyledger-core/libs/math"
-	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
-	"github.com/lazyledger/lazyledger-core/light/provider"
-	"github.com/lazyledger/lazyledger-core/light/store"
-	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	tmsync "github.com/tendermint/tendermint/libs/sync"
+	"github.com/tendermint/tendermint/light/provider"
+	"github.com/tendermint/tendermint/light/store"
+	"github.com/tendermint/tendermint/types"
 )
 
 type mode byte

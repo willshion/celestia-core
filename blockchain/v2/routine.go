@@ -6,7 +6,7 @@ import (
 
 	"github.com/Workiva/go-datastructures/queue"
 
-	"github.com/lazyledger/lazyledger-core/libs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type handleFunc = func(event Event) (Event, error)
