@@ -358,8 +358,8 @@ type Header struct {
 	DataHash tmbytes.HexBytes `json:"data_hash"` // transactions
 
 	// hashes from the app output from the prev block
-	ValidatorsHash     tmbytes.HexBytes `json:"validators_hash"`      // validators for the current block
-	NextValidatorsHash tmbytes.HexBytes `json:"next_validators_hash"` // validators for the next block
+	//ValidatorsHash     tmbytes.HexBytes `json:"validators_hash"`      // validators for the current block
+	//NextValidatorsHash tmbytes.HexBytes `json:"next_validators_hash"` // validators for the next block
 	ConsensusHash      tmbytes.HexBytes `json:"consensus_hash"`       // consensus params for current block
 	AppHash            tmbytes.HexBytes `json:"app_hash"`             // state after txs from the previous block
 	// root hash of all results from the txs from the previous block
@@ -375,7 +375,7 @@ type Header struct {
 func (h *Header) Populate(
 	version tmversion.Consensus, chainID string,
 	timestamp time.Time, lastBlockID BlockID,
-	valHash, nextValHash []byte,
+	//valHash, nextValHash []byte,
 	consensusHash, appHash, lastResultsHash []byte,
 	proposerAddress Address,
 ) {
@@ -383,8 +383,8 @@ func (h *Header) Populate(
 	h.ChainID = chainID
 	h.Time = timestamp
 	h.LastBlockID = lastBlockID
-	h.ValidatorsHash = valHash
-	h.NextValidatorsHash = nextValHash
+	//h.ValidatorsHash = valHash
+	//h.NextValidatorsHash = nextValHash
 	h.ConsensusHash = consensusHash
 	h.AppHash = appHash
 	h.LastResultsHash = lastResultsHash
@@ -431,12 +431,12 @@ func (h Header) ValidateBasic() error {
 
 	// Basic validation of hashes related to application data.
 	// Will validate fully against state in state#ValidateBlock.
-	if err := ValidateHash(h.ValidatorsHash); err != nil {
-		return fmt.Errorf("wrong ValidatorsHash: %v", err)
-	}
-	if err := ValidateHash(h.NextValidatorsHash); err != nil {
-		return fmt.Errorf("wrong NextValidatorsHash: %v", err)
-	}
+	//if err := ValidateHash(h.ValidatorsHash); err != nil {
+	//	return fmt.Errorf("wrong ValidatorsHash: %v", err)
+	//}
+	//if err := ValidateHash(h.NextValidatorsHash); err != nil {
+	//	return fmt.Errorf("wrong NextValidatorsHash: %v", err)
+	//}
 	if err := ValidateHash(h.ConsensusHash); err != nil {
 		return fmt.Errorf("wrong ConsensusHash: %v", err)
 	}
@@ -455,7 +455,7 @@ func (h Header) ValidateBasic() error {
 // since a Header is not valid unless there is
 // a ValidatorsHash (corresponding to the validator set).
 func (h *Header) Hash() tmbytes.HexBytes {
-	if h == nil || len(h.ValidatorsHash) == 0 {
+	if h == nil /*|| len(h.ValidatorsHash) == 0*/ {
 		return nil
 	}
 	hbz, err := h.Version.Marshal()
@@ -481,8 +481,8 @@ func (h *Header) Hash() tmbytes.HexBytes {
 		bzbi,
 		cdcEncode(h.LastCommitHash),
 		cdcEncode(h.DataHash),
-		cdcEncode(h.ValidatorsHash),
-		cdcEncode(h.NextValidatorsHash),
+		//cdcEncode(h.ValidatorsHash),
+		//cdcEncode(h.NextValidatorsHash),
 		cdcEncode(h.ConsensusHash),
 		cdcEncode(h.AppHash),
 		cdcEncode(h.LastResultsHash),
@@ -503,10 +503,10 @@ func (h *Header) StringIndented(indent string) string {
 %s  Time:           %v
 %s  LastBlockID:    %v
 %s  LastCommit:     %v
-%s  Data:           %v
-%s  Validators:     %v
-%s  NextValidators: %v
-%s  App:            %v
+%s  Data:           %v` +
+//%s  Validators:     %v
+//%s  NextValidators: %v
+`%s  App:            %v
 %s  Consensus:      %v
 %s  Results:        %v
 %s  Evidence:       %v
@@ -519,8 +519,8 @@ func (h *Header) StringIndented(indent string) string {
 		indent, h.LastBlockID,
 		indent, h.LastCommitHash,
 		indent, h.DataHash,
-		indent, h.ValidatorsHash,
-		indent, h.NextValidatorsHash,
+		//indent, h.ValidatorsHash,
+		//indent, h.NextValidatorsHash,
 		indent, h.AppHash,
 		indent, h.ConsensusHash,
 		indent, h.LastResultsHash,
@@ -541,8 +541,8 @@ func (h *Header) ToProto() *tmproto.Header {
 		Height:             h.Height,
 		Time:               h.Time,
 		LastBlockId:        h.LastBlockID.ToProto(),
-		ValidatorsHash:     h.ValidatorsHash,
-		NextValidatorsHash: h.NextValidatorsHash,
+		//ValidatorsHash:     h.ValidatorsHash,
+		//NextValidatorsHash: h.NextValidatorsHash,
 		ConsensusHash:      h.ConsensusHash,
 		AppHash:            h.AppHash,
 		DataHash:           h.DataHash,
@@ -573,8 +573,8 @@ func HeaderFromProto(ph *tmproto.Header) (Header, error) {
 	h.Time = ph.Time
 	h.Height = ph.Height
 	h.LastBlockID = *bi
-	h.ValidatorsHash = ph.ValidatorsHash
-	h.NextValidatorsHash = ph.NextValidatorsHash
+	//h.ValidatorsHash = ph.ValidatorsHash
+	//h.NextValidatorsHash = ph.NextValidatorsHash
 	h.ConsensusHash = ph.ConsensusHash
 	h.AppHash = ph.AppHash
 	h.DataHash = ph.DataHash

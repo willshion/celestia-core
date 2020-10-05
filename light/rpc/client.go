@@ -454,27 +454,27 @@ func (c *Client) Validators(height *int64, page, perPage *int) (*ctypes.ResultVa
 	}
 
 	// Update the light client if we're behind.
-	l, err := c.updateLightClientIfNeededTo(updateHeight)
+	_, err = c.updateLightClientIfNeededTo(updateHeight)
 	if err != nil {
 		return nil, err
 	}
 
-	var tH tmbytes.HexBytes
-	switch res.BlockHeight {
-	case 1:
-		// if it's the first block we need to validate with the current validator hash as opposed to the
-		// next validator hash
-		tH = l.ValidatorsHash
-	default:
-		tH = l.NextValidatorsHash
-	}
+	//var tH tmbytes.HexBytes
+	//switch res.BlockHeight {
+	//case 1:
+	//	// if it's the first block we need to validate with the current validator hash as opposed to the
+	//	// next validator hash
+	//	tH = l.ValidatorsHash
+	//default:
+	//	tH = l.NextValidatorsHash
+	//}
 
 	// Verify validators.
 	if res.Count <= res.Total {
-		if rH := types.NewValidatorSet(res.Validators).Hash(); !bytes.Equal(rH, tH) {
-			return nil, fmt.Errorf("validators %X does not match with trusted validators %X",
-				rH, tH)
-		}
+		//if rH := types.NewValidatorSet(res.Validators).Hash(); !bytes.Equal(rH, tH) {
+		//	return nil, fmt.Errorf("validators %X does not match with trusted validators %X",
+		//		rH, tH)
+		//}
 	}
 
 	return res, nil

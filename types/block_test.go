@@ -136,7 +136,7 @@ func TestBlockHashesTo(t *testing.T) {
 
 	lastID := makeBlockIDRandom()
 	h := int64(3)
-	voteSet, valSet, vals := randVoteSet(h-1, 1, tmproto.PrecommitType, 10, 1)
+	voteSet, _, vals := randVoteSet(h-1, 1, tmproto.PrecommitType, 10, 1)
 	commit, err := MakeCommit(lastID, h-1, 1, voteSet, vals, time.Now())
 	require.NoError(t, err)
 
@@ -144,7 +144,7 @@ func TestBlockHashesTo(t *testing.T) {
 	evList := []Evidence{ev}
 
 	block := MakeBlock(h, []Tx{Tx("Hello World")}, commit, evList)
-	block.ValidatorsHash = valSet.Hash()
+	//block.ValidatorsHash = valSet.Hash()
 	assert.False(t, block.HashesTo([]byte{}))
 	assert.False(t, block.HashesTo([]byte("something else")))
 	assert.True(t, block.HashesTo(block.Hash()))
@@ -267,8 +267,8 @@ func TestHeaderHash(t *testing.T) {
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
-			ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
-			NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
+			//ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
+			//NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
 			ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
 			AppHash:            tmhash.Sum([]byte("app_hash")),
 			LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
@@ -284,8 +284,8 @@ func TestHeaderHash(t *testing.T) {
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
-			ValidatorsHash:     nil,
-			NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
+			//ValidatorsHash:     nil,
+			//NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
 			ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
 			AppHash:            tmhash.Sum([]byte("app_hash")),
 			LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
@@ -359,8 +359,8 @@ func TestMaxHeaderBytes(t *testing.T) {
 		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt32, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
-		ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
-		NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
+		//ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
+		//NextValidatorsHash: tmhash.Sum([]byte("next_validators_hash")),
 		ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
 		AppHash:            tmhash.Sum([]byte("app_hash")),
 		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
@@ -703,8 +703,8 @@ func makeRandHeader() Header {
 		LastBlockID:        BlockID{},
 		LastCommitHash:     randBytes,
 		DataHash:           randBytes,
-		ValidatorsHash:     randBytes,
-		NextValidatorsHash: randBytes,
+		//ValidatorsHash:     randBytes,
+		//NextValidatorsHash: randBytes,
 		ConsensusHash:      randBytes,
 		AppHash:            randBytes,
 

@@ -17,7 +17,7 @@ func TestLightBlockValidateBasic(t *testing.T) {
 	vals, _ := RandValidatorSet(5, 1)
 	header.Height = commit.Height
 	header.LastBlockID = commit.BlockID
-	header.ValidatorsHash = vals.Hash()
+	//header.ValidatorsHash = vals.Hash()
 	vals2, _ := RandValidatorSet(3, 1)
 	vals3 := vals.Copy()
 	vals3.Proposer = &Validator{}
@@ -61,7 +61,7 @@ func TestLightBlockProtobuf(t *testing.T) {
 	vals, _ := RandValidatorSet(5, 1)
 	header.Height = commit.Height
 	header.LastBlockID = commit.BlockID
-	header.ValidatorsHash = vals.Hash()
+	// header.ValidatorsHash = vals.Hash()
 	vals3 := vals.Copy()
 	vals3.Proposer = &Validator{}
 	commit.BlockID.Hash = header.Hash()
@@ -119,8 +119,8 @@ func TestSignedHeaderValidateBasic(t *testing.T) {
 		LastBlockID:        commit.BlockID,
 		LastCommitHash:     commit.Hash(),
 		DataHash:           commit.Hash(),
-		ValidatorsHash:     commit.Hash(),
-		NextValidatorsHash: commit.Hash(),
+		//ValidatorsHash:     commit.Hash(),
+		//NextValidatorsHash: commit.Hash(),
 		ConsensusHash:      commit.Hash(),
 		AppHash:            commit.Hash(),
 		LastResultsHash:    commit.Hash(),

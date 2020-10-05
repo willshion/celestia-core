@@ -118,13 +118,13 @@ func VerifyAdjacent(
 	}
 
 	// Check the validator hashes are the same
-	if !bytes.Equal(untrustedHeader.ValidatorsHash, trustedHeader.NextValidatorsHash) {
-		err := fmt.Errorf("expected old header next validators (%X) to match those from new header (%X)",
-			trustedHeader.NextValidatorsHash,
-			untrustedHeader.ValidatorsHash,
-		)
-		return err
-	}
+	//if !bytes.Equal(untrustedHeader.ValidatorsHash, trustedHeader.NextValidatorsHash) {
+	//	err := fmt.Errorf("expected old header next validators (%X) to match those from new header (%X)",
+	//		trustedHeader.NextValidatorsHash,
+	//		untrustedHeader.ValidatorsHash,
+	//	)
+	//	return err
+	//}
 
 	// Ensure that +2/3 of new validators signed correctly.
 	if err := untrustedVals.VerifyCommitLight(chainID, untrustedHeader.Commit.BlockID, untrustedHeader.Height,
@@ -186,13 +186,13 @@ func verifyNewHeaderAndVals(
 			maxClockDrift)
 	}
 
-	if !bytes.Equal(untrustedHeader.ValidatorsHash, untrustedVals.Hash()) {
-		return fmt.Errorf("expected new header validators (%X) to match those that were supplied (%X) at height %d",
-			untrustedHeader.ValidatorsHash,
-			untrustedVals.Hash(),
-			untrustedHeader.Height,
-		)
-	}
+	//if !bytes.Equal(untrustedHeader.ValidatorsHash, untrustedVals.Hash()) {
+	//	return fmt.Errorf("expected new header validators (%X) to match those that were supplied (%X) at height %d",
+	//		untrustedHeader.ValidatorsHash,
+	//		untrustedVals.Hash(),
+	//		untrustedHeader.Height,
+	//	)
+	//}
 
 	return nil
 }

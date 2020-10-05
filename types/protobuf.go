@@ -44,8 +44,8 @@ func (tm2pb) Header(header *Header) tmproto.Header {
 		LastCommitHash: header.LastCommitHash,
 		DataHash:       header.DataHash,
 
-		ValidatorsHash:     header.ValidatorsHash,
-		NextValidatorsHash: header.NextValidatorsHash,
+		//ValidatorsHash:     header.ValidatorsHash,
+		//NextValidatorsHash: header.NextValidatorsHash,
 		ConsensusHash:      header.ConsensusHash,
 		AppHash:            header.AppHash,
 		LastResultsHash:    header.LastResultsHash,
