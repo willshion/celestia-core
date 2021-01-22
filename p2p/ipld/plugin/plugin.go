@@ -10,13 +10,15 @@ import (
 
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
-	"github.com/lazyledger/nmt"
+	"github.com/ipfs/go-ipfs/plugin/loader"
 
 	"github.com/ipfs/go-ipfs/core/coredag"
 	"github.com/ipfs/go-ipfs/plugin"
 	format "github.com/ipfs/go-ipld-format"
 	node "github.com/ipfs/go-ipld-format"
 	mh "github.com/multiformats/go-multihash"
+
+	"github.com/lazyledger/nmt"
 )
 
 const (
@@ -37,6 +39,10 @@ const (
 // Plugins is an exported list of plugins that will be loaded by go-ipfs.
 var Plugins = []plugin.Plugin{
 	&LazyLedgerPlugin{},
+}
+
+func init() {
+	loader.Preload(Plugins...)
 }
 
 var _ plugin.PluginIPLD = &LazyLedgerPlugin{}

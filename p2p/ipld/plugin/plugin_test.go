@@ -28,8 +28,7 @@ import (
 
 func TestDataSquareRowOrColumnRawInputParserCidEqNmtRoot(t *testing.T) {
 	ctx := context.Background()
-	loader.Preload(&LazyLedgerPlugin{})
-	api := spawnEphemeral(ctx,t)
+	api := spawnEphemeral(ctx, t)
 	dagService := api.Dag()
 
 	tests := []struct {
@@ -160,7 +159,7 @@ func createTempRepo() (string, error) {
 }
 
 // Spawns a node to be used just for this run (i.e. creates a tmp repo)
-func spawnEphemeral(ctx context.Context, t *testing.T) (icore.CoreAPI) {
+func spawnEphemeral(ctx context.Context, t *testing.T) icore.CoreAPI {
 	// Load any external plugins if available on externalPluginsPath
 	plugins, err := loader.NewPluginLoader(filepath.Join("", "plugins"))
 	if err != nil {
@@ -176,7 +175,6 @@ func spawnEphemeral(ctx context.Context, t *testing.T) (icore.CoreAPI) {
 		t.Fatalf("error initializing plugins: %s", err)
 	}
 
-
 	// Create a Temporary Repo
 	repoPath, err := createTempRepo()
 	if err != nil {
@@ -188,7 +186,7 @@ func spawnEphemeral(ctx context.Context, t *testing.T) (icore.CoreAPI) {
 }
 
 // Creates an IPFS node and returns its coreAPI
-func createNode(ctx context.Context, repoPath string, t *testing.T) (icore.CoreAPI) {
+func createNode(ctx context.Context, repoPath string, t *testing.T) icore.CoreAPI {
 	// Open the repo
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
