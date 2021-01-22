@@ -2,20 +2,36 @@ package lazyledger_ipld
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
 
 	shell "github.com/ipfs/go-ipfs-api"
+	config "github.com/ipfs/go-ipfs-config"
+	"github.com/ipfs/go-ipfs/core"
+	"github.com/ipfs/go-ipfs/core/coreapi"
+	"github.com/ipfs/go-ipfs/core/node/libp2p"
+	"github.com/ipfs/go-ipfs/plugin/loader"
+	"github.com/ipfs/go-ipfs/repo/fsrepo"
+	icore "github.com/ipfs/interface-go-ipfs-core"
 
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/rsmt2d"
 )
 
 func TestDataSquareRowOrColumnRawInputParserCidEqNmtRoot(t *testing.T) {
+	ctx := context.Background()
+	loader.Preload(&LazyLedgerPlugin{})
+	api := spawnEphemeral(ctx,t)
+	dagService := api.Dag()
+
 	tests := []struct {
 		name     string
 		leafData [][]byte
@@ -55,6 +71,19 @@ func TestDataSquareRowOrColumnRawInputParserCidEqNmtRoot(t *testing.T) {
 			lastLeafNodeData := gotNodes[len(gotNodes)-1].RawData()
 			if gotData, wantData := lastLeafNodeData[nodePrefixOffset:], tt.leafData[0]; !bytes.Equal(gotData, wantData) {
 				t.Errorf("first node's data does not match the leaf's data\ngot: %v\nwant: %v", gotData, wantData)
+			}
+
+			err = dagService.AddMany(ctx, gotNodes)
+			if err != nil {
+				t.Errorf("APIDagService.AddMany(): %v", err)
+			}
+			gotNode, err := dagService.Get(ctx, rootNodeCid)
+			if err != nil {
+				t.Errorf("dagService.Get(%v): %v", rootNodeCid, err)
+			}
+			root := gotNodes[0]
+			if !reflect.DeepEqual(gotNode, root) {
+				t.Errorf("got diff, got: %v, want: %v", gotNode.(nmtNode), root.(nmtNode))
 			}
 		})
 	}
@@ -107,6 +136,85 @@ func TestDagPutWithPlugin(t *testing.T) {
 			t.Errorf("DagGet returned different data than pushed, got: %v, want: %v", gotShare, wantShare)
 		}
 	}
+}
+
+func createTempRepo() (string, error) {
+	repoPath, err := ioutil.TempDir("", "ipfs-shell")
+	if err != nil {
+		return "", fmt.Errorf("failed to get temp dir: %s", err)
+	}
+
+	// Create a config with default options and a 2048 bit key
+	cfg, err := config.Init(ioutil.Discard, 2048)
+	if err != nil {
+		return "", err
+	}
+
+	// Create the repo with the config
+	err = fsrepo.Init(repoPath, cfg)
+	if err != nil {
+		return "", fmt.Errorf("failed to init ephemeral node: %s", err)
+	}
+
+	return repoPath, nil
+}
+
+// Spawns a node to be used just for this run (i.e. creates a tmp repo)
+func spawnEphemeral(ctx context.Context, t *testing.T) (icore.CoreAPI) {
+	// Load any external plugins if available on externalPluginsPath
+	plugins, err := loader.NewPluginLoader(filepath.Join("", "plugins"))
+	if err != nil {
+		t.Fatalf("error loading plugins: %s", err)
+	}
+
+	// Load preloaded and external plugins
+	if err := plugins.Initialize(); err != nil {
+		t.Fatalf("error initializing plugins: %s", err)
+	}
+
+	if err := plugins.Inject(); err != nil {
+		t.Fatalf("error initializing plugins: %s", err)
+	}
+
+
+	// Create a Temporary Repo
+	repoPath, err := createTempRepo()
+	if err != nil {
+		t.Fatalf("failed to create temp repo: %s", err)
+	}
+
+	// Spawning an ephemeral IPFS node
+	return createNode(ctx, repoPath, t)
+}
+
+// Creates an IPFS node and returns its coreAPI
+func createNode(ctx context.Context, repoPath string, t *testing.T) (icore.CoreAPI) {
+	// Open the repo
+	repo, err := fsrepo.Open(repoPath)
+	if err != nil {
+		t.Fatalf("fsrepo.Open(%v): %v", repoPath, err)
+	}
+
+	// Construct the node
+
+	nodeOptions := &core.BuildCfg{
+		Online:  true,
+		Routing: libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
+		// Routing: libp2p.DHTClientOption, // This option sets the node to be a client DHT node (only fetching records)
+		Repo: repo,
+	}
+
+	node, err := core.NewNode(ctx, nodeOptions)
+	if err != nil {
+		t.Fatalf("core.NewNode(): %v", err)
+	}
+
+	// Attach the Core API to the constructed node
+	api, err := coreapi.NewCoreAPI(node)
+	if err != nil {
+		t.Fatalf("coreapi.NewCoreAPI(): %v", err)
+	}
+	return api
 }
 
 func generateExtendedRow(t *testing.T) [][]byte {

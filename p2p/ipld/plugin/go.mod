@@ -7,7 +7,11 @@ require (
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-ipfs v0.7.0
 	github.com/ipfs/go-ipfs-api v0.2.0
+	// used in tests:
+	github.com/ipfs/go-ipfs-config v0.9.0
 	github.com/ipfs/go-ipld-format v0.2.0
+	// used in tests:
+	github.com/ipfs/interface-go-ipfs-core v0.4.0
 	github.com/lazyledger/nmt v0.1.0
 	// rsmt2d is only used in tests:
 	github.com/lazyledger/rsmt2d v0.0.0-20201215203123-e5ec7910ddd4
