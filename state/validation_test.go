@@ -84,7 +84,7 @@ func TestValidateBlockHeader(t *testing.T) {
 			Invalid blocks don't pass
 		*/
 		for _, tc := range testCases {
-			block, _ := state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, lastCommit, proposerAddr)
+			block, _ := state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, lastCommit, proposerAddr, nil)
 			tc.malleateBlock(block)
 			err := blockExec.ValidateBlock(state, block)
 			t.Logf("%s: %v", tc.name, err)
@@ -105,6 +105,7 @@ func TestValidateBlockHeader(t *testing.T) {
 		makeTxs(nextHeight), nil, nil, types.Messages{},
 		lastCommit,
 		state.Validators.GetProposer().Address,
+		nil,
 	)
 	state.InitialHeight = nextHeight + 1
 	err := blockExec.ValidateBlock(state, block)
@@ -152,7 +153,7 @@ func TestValidateBlockCommit(t *testing.T) {
 				state.LastBlockID,
 				[]types.CommitSig{wrongHeightVote.CommitSig()},
 			)
-			block, _ := state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, wrongHeightCommit, proposerAddr)
+			block, _ := state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, wrongHeightCommit, proposerAddr, nil)
 			err = blockExec.ValidateBlock(state, block)
 			_, isErrInvalidCommitHeight := err.(types.ErrInvalidCommitHeight)
 			require.True(t, isErrInvalidCommitHeight, "expected ErrInvalidCommitHeight at height %d but got: %v", height, err)
@@ -160,7 +161,7 @@ func TestValidateBlockCommit(t *testing.T) {
 			/*
 				#2589: test len(block.LastCommit.Signatures) == state.LastValidators.Size()
 			*/
-			block, _ = state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, wrongSigsCommit, proposerAddr)
+			block, _ = state.MakeBlock(height, makeTxs(height), nil, nil, types.Messages{}, wrongSigsCommit, proposerAddr, nil)
 			err = blockExec.ValidateBlock(state, block)
 			_, isErrInvalidCommitSignatures := err.(types.ErrInvalidCommitSignatures)
 			require.True(t, isErrInvalidCommitSignatures,
@@ -267,7 +268,7 @@ func TestValidateBlockEvidence(t *testing.T) {
 				evidence = append(evidence, newEv)
 				currentBytes += int64(len(newEv.Bytes()))
 			}
-			block, _ := state.MakeBlock(height, makeTxs(height), evidence, nil, types.Messages{}, lastCommit, proposerAddr)
+			block, _ := state.MakeBlock(height, makeTxs(height), evidence, nil, types.Messages{}, lastCommit, proposerAddr, nil)
 			err := blockExec.ValidateBlock(state, block)
 			if assert.Error(t, err) {
 				_, ok := err.(*types.ErrEvidenceOverflow)

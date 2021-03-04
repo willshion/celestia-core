@@ -62,6 +62,7 @@ func makeAndApplyGoodBlock(state sm.State, height int64, lastCommit *types.Commi
 		types.Messages{},
 		lastCommit,
 		proposerAddr,
+		nil,
 	)
 	if err := blockExec.ValidateBlock(state, block); err != nil {
 		return state, types.BlockID{}, err
@@ -148,6 +149,7 @@ func makeBlock(state sm.State, height int64) *types.Block {
 		types.Messages{},
 		new(types.Commit),
 		state.Validators.GetProposer().Address,
+		nil,
 	)
 	return block
 }
