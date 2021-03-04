@@ -16,9 +16,13 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gtank/merlin v0.1.1
 	github.com/hdevalence/ed25519consensus v0.0.0-20201207055737-7fde80a9d5ff
+	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-ipfs v0.7.0
 	github.com/ipfs/go-ipfs-config v0.12.0
+	github.com/ipfs/go-ipfs-pinner v0.1.1
+	github.com/ipfs/go-ipld-format v0.2.0
 	github.com/ipfs/interface-go-ipfs-core v0.4.0
+	github.com/ipld/go-ipld-prime v0.5.1-0.20201021195245-109253e8a018
 	github.com/lazyledger/lazyledger-core/p2p/ipld/plugin v0.0.0-20210219190522-0eccfb24e2aa
 	github.com/lazyledger/nmt v0.2.0
 	github.com/lazyledger/rsmt2d v0.0.0-20201215203123-e5ec7910ddd4

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -10,11 +11,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
+	format "github.com/ipfs/go-ipld-format"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 
-	"github.com/lazyledger/nmt"
-	"github.com/lazyledger/nmt/namespace"
-	"github.com/lazyledger/rsmt2d"
-
+	ipfsapi "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/lazyledger/lazyledger-core/crypto"
 	"github.com/lazyledger/lazyledger-core/crypto/merkle"
 	"github.com/lazyledger/lazyledger-core/crypto/tmhash"
@@ -23,9 +23,13 @@ import (
 	tmmath "github.com/lazyledger/lazyledger-core/libs/math"
 	"github.com/lazyledger/lazyledger-core/libs/protoio"
 	tmsync "github.com/lazyledger/lazyledger-core/libs/sync"
+	"github.com/lazyledger/lazyledger-core/p2p/ipld/plugin/nodes"
 	tmproto "github.com/lazyledger/lazyledger-core/proto/tendermint/types"
 	tmversion "github.com/lazyledger/lazyledger-core/proto/tendermint/version"
 	"github.com/lazyledger/lazyledger-core/version"
+	"github.com/lazyledger/nmt"
+	"github.com/lazyledger/nmt/namespace"
+	"github.com/lazyledger/rsmt2d"
 )
 
 const (
@@ -181,12 +185,12 @@ func (b *Block) ValidateBasic() error {
 }
 
 // fillHeader fills in any remaining header fields that are a function of the block data
-func (b *Block) fillHeader() {
+func (b *Block) fillHeader(ipfsApi ipfsapi.CoreAPI) {
 	if b.LastCommitHash == nil {
 		b.LastCommitHash = b.LastCommit.Hash()
 	}
 	if b.DataHash == nil {
-		b.fillDataAvailabilityHeader()
+		b.fillDataAvailabilityHeader(ipfsApi)
 	}
 	if b.EvidenceHash == nil {
 		b.EvidenceHash = b.Evidence.Hash()
@@ -195,7 +199,7 @@ func (b *Block) fillHeader() {
 
 // fillDataAvailabilityHeader fills in any remaining DataAvailabilityHeader fields
 // that are a function of the block data.
-func (b *Block) fillDataAvailabilityHeader() {
+func (b *Block) fillDataAvailabilityHeader(ipfsApi ipfsapi.CoreAPI) {
 	namespacedShares := b.Data.computeShares()
 	shares := namespacedShares.RawShares()
 	if len(shares) == 0 {
@@ -223,12 +227,17 @@ func (b *Block) fillDataAvailabilityHeader() {
 	for outerIdx := uint(0); outerIdx < squareWidth; outerIdx++ {
 		rowTree := nmt.New(newBaseHashFunc(), nmt.NamespaceIDSize(NamespaceSize))
 		colTree := nmt.New(newBaseHashFunc(), nmt.NamespaceIDSize(NamespaceSize))
+		rowLeaves := make([][]byte, squareWidth)
+		colLeaves := make([][]byte, squareWidth)
 		for innerIdx := uint(0); innerIdx < squareWidth; innerIdx++ {
 			if outerIdx < originalDataWidth && innerIdx < originalDataWidth {
 				rowShare := namespacedShares[outerIdx*originalDataWidth+innerIdx]
 				colShare := namespacedShares[innerIdx*originalDataWidth+outerIdx]
 				mustPush(rowTree, rowShare.NamespaceID(), rowShare.Data())
 				mustPush(colTree, colShare.NamespaceID(), colShare.Data())
+				rowLeaves[innerIdx] = append([]byte(rowShare.NamespaceID()), rowShare.Data()...)
+				colLeaves[innerIdx] = append([]byte(colShare.NamespaceID()), rowShare.Data()...)
+
 			} else {
 				rowData := extendedDataSquare.Row(outerIdx)
 				colData := extendedDataSquare.Column(outerIdx)
@@ -237,13 +246,23 @@ func (b *Block) fillDataAvailabilityHeader() {
 				parityCellFromCol := colData[innerIdx]
 				mustPush(rowTree, ParitySharesNamespaceID, parityCellFromRow)
 				mustPush(colTree, ParitySharesNamespaceID, parityCellFromCol)
+				rowLeaves[innerIdx] = append(copyOfParityNamespaceID(), parityCellFromRow...)
+				colLeaves[innerIdx] = append(copyOfParityNamespaceID(), parityCellFromCol...)
 			}
 		}
+		putLeaves(context.Background(), rowLeaves, pinningAdder{CoreAPI: ipfsApi})
+
 		b.DataAvailabilityHeader.RowsRoots[outerIdx] = rowTree.Root()
 		b.DataAvailabilityHeader.ColumnRoots[outerIdx] = colTree.Root()
 	}
 
 	b.DataHash = b.DataAvailabilityHeader.Hash()
+}
+
+func copyOfParityNamespaceID() []byte {
+	out := make([]byte, len(ParitySharesNamespaceID))
+	copy(out, ParitySharesNamespaceID)
+	return out
 }
 
 func mustPush(rowTree *nmt.NamespacedMerkleTree, id namespace.ID, data []byte) {
@@ -259,6 +278,74 @@ func mustPush(rowTree *nmt.NamespacedMerkleTree, id namespace.ID, data []byte) {
 	}
 }
 
+// putLeaves pins the provided ipld.Nodes to the local ipfs dag
+func putLeaves(ctx context.Context, namespacedLeaves [][]byte, ipfsApi ipfsapi.CoreAPI) error {
+	if ipfsApi == nil {
+		return nil
+	}
+
+	// make a io.Writer for the leaves
+	b := bytes.NewBuffer([]byte{})
+
+	// flatten the leaves by writing independently
+	for _, leaf := range namespacedLeaves {
+		_, err := b.Write(leaf)
+		if err != nil {
+			return err
+		}
+	}
+
+	// create the ipld.Nodes using the plugin
+	ipldNodes, err := nodes.DataSquareRowOrColumnRawInputParser(b, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	// add the new batch of nodes using
+	return format.NewBatch(ctx, pinningAdder{CoreAPI: ipfsApi}).AddMany(ctx, ipldNodes)
+}
+
+// TODO(evan): put pinningAdder somewhere else
+
+// pinningAdder wraps the core ipfs api in order to pin nodes to the local dag
+// fulfills the ipld.NodeAdder interface
+type pinningAdder struct {
+	ipfsapi.CoreAPI
+}
+
+// Add fulfills the NodeAdder interface by pinning a single ipld nod to
+// the local dag
+func (p pinningAdder) Add(ctx context.Context, nd format.Node) error {
+	// add the node to the dag
+	err := p.Add(ctx, nd)
+	if err != nil {
+		return err
+	}
+
+	// pin the node to the dag
+	return p.Pin().Add(ctx, path.IpldPath(nd.Cid()))
+}
+
+// AddMany fulfills the NodeAdder interface by pinning multiple ipld nodes to
+// the local dag
+func (p pinningAdder) AddMany(ctx context.Context, nds []format.Node) error {
+	// add the nodes to the dag
+	err := p.AddMany(ctx, nds)
+	if err != nil {
+		return err
+	}
+
+	// pin the nodes locally
+	for _, n := range nds {
+		err = p.Pin().Add(ctx, path.IpldPath(n.Cid()))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Hash computes and returns the block hash.
 // If the block is incomplete, block hash is nil for safety.
 func (b *Block) Hash() tmbytes.HexBytes {
@@ -271,7 +358,7 @@ func (b *Block) Hash() tmbytes.HexBytes {
 	if b.LastCommit == nil {
 		return nil
 	}
-	b.fillHeader()
+	b.fillHeader(nil)
 	return b.Header.Hash()
 }
 
@@ -472,7 +559,9 @@ func MaxDataBytesNoEvidence(maxBytes int64, valsCount int) int64 {
 func MakeBlock(
 	height int64,
 	txs []Tx, evidence []Evidence, intermediateStateRoots []tmbytes.HexBytes, messages Messages,
-	lastCommit *Commit) *Block {
+	lastCommit *Commit,
+	ipfsApi ipfsapi.CoreAPI,
+) *Block {
 	block := &Block{
 		Header: Header{
 			Version: tmversion.Consensus{Block: version.BlockProtocol, App: 0},
@@ -486,7 +575,7 @@ func MakeBlock(
 		},
 		LastCommit: lastCommit,
 	}
-	block.fillHeader()
+	block.fillHeader(ipfsApi)
 	return block
 }
 

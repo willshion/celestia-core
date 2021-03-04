@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	ipfsapi "github.com/ipfs/interface-go-ipfs-core"
 	abci "github.com/lazyledger/lazyledger-core/abci/types"
 	cryptoenc "github.com/lazyledger/lazyledger-core/crypto/encoding"
 	"github.com/lazyledger/lazyledger-core/libs/fail"
@@ -96,6 +97,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	height int64,
 	state State, commit *types.Commit,
 	proposerAddr []byte,
+	ipfsApi ipfsapi.CoreAPI,
 ) (*types.Block, *types.PartSet) {
 
 	maxBytes := state.ConsensusParams.Block.MaxBytes
@@ -155,7 +157,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 
 	messages := types.MessagesFromProto(pbmessages)
 
-	return state.MakeBlock(height, processedTxs, evidence, nil, messages, commit, proposerAddr)
+	return state.MakeBlock(height, processedTxs, evidence, nil, messages, commit, proposerAddr, ipfsApi)
 }
 
 // ValidateBlock validates the given block against the given state.

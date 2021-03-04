@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	ipfsapi "github.com/ipfs/interface-go-ipfs-core"
 	tmbytes "github.com/lazyledger/lazyledger-core/libs/bytes"
 
 	tmstate "github.com/lazyledger/lazyledger-core/proto/tendermint/state"
@@ -241,10 +242,11 @@ func (state State) MakeBlock(
 	messages types.Messages,
 	commit *types.Commit,
 	proposerAddress []byte,
+	ipfsApi ipfsapi.CoreAPI,
 ) (*types.Block, *types.PartSet) {
 
 	// Build base block with block data.
-	block := types.MakeBlock(height, txs, evidence, intermediateStateRoots, messages, commit)
+	block := types.MakeBlock(height, txs, evidence, intermediateStateRoots, messages, commit, ipfsApi)
 
 	// Set time.
 	var timestamp time.Time

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	ipfsapi "github.com/ipfs/interface-go-ipfs-core"
 	cfg "github.com/lazyledger/lazyledger-core/config"
 	cstypes "github.com/lazyledger/lazyledger-core/consensus/types"
 	"github.com/lazyledger/lazyledger-core/crypto"
@@ -91,6 +92,9 @@ type State struct {
 
 	// store blocks and commits
 	blockStore sm.BlockStore
+
+	// ipfs api
+	IpfsApi ipfsapi.CoreAPI
 
 	// create and execute blocks
 	blockExec *sm.BlockExecutor
@@ -1152,7 +1156,7 @@ func (cs *State) createProposalBlock() (block *types.Block, blockParts *types.Pa
 	}
 	proposerAddr := cs.privValidatorPubKey.Address()
 
-	return cs.blockExec.CreateProposalBlock(cs.Height, cs.state, commit, proposerAddr)
+	return cs.blockExec.CreateProposalBlock(cs.Height, cs.state, commit, proposerAddr, cs.IpfsApi)
 }
 
 // Enter: `timeoutPropose` after entering Propose.
