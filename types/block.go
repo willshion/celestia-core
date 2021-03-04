@@ -357,7 +357,7 @@ type pinningAdder struct {
 // the local dag
 func (p pinningAdder) Add(ctx context.Context, nd format.Node) error {
 	// add the node to the dag
-	err := p.Add(ctx, nd)
+	err := p.Dag().Add(ctx, nd)
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func (p pinningAdder) Add(ctx context.Context, nd format.Node) error {
 // the local dag
 func (p pinningAdder) AddMany(ctx context.Context, nds []format.Node) error {
 	// add the nodes to the dag
-	err := p.AddMany(ctx, nds)
+	err := p.Dag().AddMany(ctx, nds)
 	if err != nil {
 		return err
 	}
