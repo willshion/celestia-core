@@ -1081,7 +1081,7 @@ func (cs *State) defaultDecideProposal(height int64, round int32) {
 		// TODO(evan): use some other context
 		err := block.PutBlock(context.Background(), cs.IpfsAPI)
 		if err != nil {
-			cs.Logger.Error(fmt.Sprintf("failure to post block data to IPFS: %w", err))
+			cs.Logger.Error(fmt.Sprintf("failure to post block data to IPFS: %s", err.Error()))
 		}
 	}
 
