@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
@@ -13,6 +14,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	format "github.com/ipfs/go-ipld-format"
 
+	ipfsapi "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/lazyledger/lazyledger-core/p2p/ipld/plugin/nodes"
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
@@ -263,8 +265,9 @@ func mustPush(rowTree *nmt.NamespacedMerkleTree, id namespace.ID, data []byte) {
 	}
 }
 
-func (b *Block) PutBlock(ctx context.Context, nodeAdder format.NodeAdder) error {
-	if nodeAdder == nil {
+// PutBlock add
+func (b *Block) PutBlock(ctx context.Context, api ipfsapi.CoreAPI) error {
+	if api == nil {
 		return errors.New("no ipfs node adder provided")
 	}
 
@@ -281,18 +284,60 @@ func (b *Block) PutBlock(ctx context.Context, nodeAdder format.NodeAdder) error 
 	// add namespaces to erasured shares and flatten the eds
 	leaves := flattenNamespacedEDS(namespacedShares, eds)
 
-	// create the ipld nodes using the plugin
-	var allNodes []format.Node
 	for _, leafSet := range leaves {
-		ipldNodes, err := generateIPLDNodes(leafSet)
+		collector := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
+		tree := nmt.New(sha256.New(), nmt.NodeVisitor(collector.Visit))
+		for _, share := range leafSet {
+			err = tree.Push(share[:NamespaceSize], share[NamespaceSize:])
+			if err != nil {
+				return err
+			}
+		}
+		batch := collector.Batch()
+		err = batch.Commit()
 		if err != nil {
 			return err
 		}
-		allNodes = append(allNodes, ipldNodes...)
 	}
 
+	// for i := len(allNodes) - 1; i >= 0; i-- {
+	// 	node := allNodes[i]
+	// 	err = api.Dag().Add(ctx, node)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	fmt.Println("added node", node.Cid().String())
+	// }
+	// for _, node := range allNodes {
+	// 	err = api.Dag().Add(ctx, node)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	fmt.Println("added node", node.Cid().String())
+	// }
+
+	// for _, node := range allNodes {
+	// 	err = api.Pin().Add(ctx, path.IpldPath(node.Cid()))
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	fmt.Println("pinned node", node.Cid().String())
+	// }
+
+	// err = api.Dag().AddMany(ctx, allNodes)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// err = api.Dag().Pinning().AddMany(ctx, allNodes)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// Batch add the data to ipfs
+
 	// Batch pin the data to ipfs
-	return format.NewBatch(ctx, nodeAdder).AddMany(ctx, allNodes)
+	return nil
 }
 
 // flattenNamespacedEDS returns a flattend extendedDataSquare with namespaces
@@ -301,16 +346,15 @@ func flattenNamespacedEDS(nss NamespacedShares, eds *rsmt2d.ExtendedDataSquare) 
 	squareWidth := eds.Width()
 	originalDataWidth := squareWidth / 2
 
-	// TODO(evan): find out why this assumtion isn't true sometimes
-	// if uint(len(nss)) != originalDataWidth {
-	// 	panic(
-	// 		fmt.Sprintf(
-	// 			"unexpected numbers of namespaces: actual %d expected %d",
-	// 			len(nss),
-	// 			squareWidth/2,
-	// 		),
-	// 	)
-	// }
+	if uint(len(nss)) != originalDataWidth*originalDataWidth {
+		panic(
+			fmt.Sprintf(
+				"unexpected numbers of namespaces: actual %d expected %d",
+				len(nss),
+				squareWidth/2,
+			),
+		)
+	}
 
 	leaves := make([][][]byte, 2*squareWidth)
 	// this is adding the namespace back to Q1 shares and the parity ns to the
@@ -343,18 +387,20 @@ func flattenNamespacedEDS(nss NamespacedShares, eds *rsmt2d.ExtendedDataSquare) 
 
 func generateIPLDNodes(namespacedLeaves [][]byte) ([]format.Node, error) {
 	// make a io.Writer for the leaves
-	b := bytes.NewBuffer([]byte{})
+
+	collector := nodes.NewNodeCollector()
+	tree := nmt.New(sha256.New(), nmt.NamespaceIDSize(NamespaceSize), nmt.NodeVisitor(collector.Visit))
 
 	// flatten the leaves by writing independently
 	for _, leaf := range namespacedLeaves {
-		_, err := b.Write(leaf)
+		err := tree.Push(leaf[:NamespaceSize], leaf[NamespaceSize:])
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// create the ipld.Nodes using the plugin
-	return nodes.DataSquareRowOrColumnRawInputParser(b, 0, 0)
+	tree.Root()
+	return collector.Nodes(), nil
 }
 
 func copyOfParityNamespaceID() []byte {

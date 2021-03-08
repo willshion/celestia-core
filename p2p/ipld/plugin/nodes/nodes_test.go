@@ -84,16 +84,21 @@ func TestNodeCollector(t *testing.T) {
 				}
 			}
 
-			n.Root()
+			rootDigest := n.Root()
 
 			gotNodes := collector.Nodes()
 
 			rootNodeCid := gotNodes[0].Cid()
 			multiHashOverhead := 4
 			lastNodeHash := rootNodeCid.Hash()
-			if got, want := lastNodeHash[multiHashOverhead:], n.Root().Bytes(); !bytes.Equal(got, want) {
+			if got, want := lastNodeHash[multiHashOverhead:], rootDigest.Bytes(); !bytes.Equal(got, want) {
 				t.Errorf("hashes don't match\ngot: %v\nwant: %v", got, want)
 			}
+
+			if mustCidFromNamespacedSha256(rootDigest.Bytes()).String() != rootNodeCid.String() {
+				t.Error("root cid nod and hash not identical")
+			}
+
 			lastNodeCid := gotNodes[len(gotNodes)-1].Cid()
 			if gotHash, wantHash := lastNodeCid.Hash(), nmt.Sha256Namespace8FlaggedLeaf(tt.leafData[0]); !bytes.Equal(gotHash[multiHashOverhead:], wantHash) {
 				t.Errorf("first node's hash does not match the Cid\ngot: %v\nwant: %v", gotHash[multiHashOverhead:], wantHash)
@@ -103,12 +108,26 @@ func TestNodeCollector(t *testing.T) {
 			if gotData, wantData := lastLeafNodeData[nodePrefixOffset:], tt.leafData[0]; !bytes.Equal(gotData, wantData) {
 				t.Errorf("first node's data does not match the leaf's data\ngot: %v\nwant: %v", gotData, wantData)
 			}
+
+			// ensure that every leaf was collected
+			hasMap := make(map[string]bool)
+			for _, node := range gotNodes {
+				hasMap[node.Cid().String()] = true
+			}
+			hasher := nmt.NewNmtHasher(sha256.New(), namespaceSize, true)
+			for _, leaf := range tt.leafData {
+				leafCid := mustCidFromNamespacedSha256(hasher.HashLeaf(leaf))
+				_, has := hasMap[leafCid.String()]
+				if !has {
+					t.Errorf("leaf CID not found in collected nodes. missing: %s", leafCid.String())
+				}
+			}
 		})
 	}
 }
 
 func TestDagPutWithPlugin(t *testing.T) {
-	t.Skip("Requires running ipfs daemon (serving the HTTP Api) with the plugin compiled and installed")
+	// t.Skip("Requires running ipfs daemon (serving the HTTP Api) with the plugin compiled and installed")
 
 	t.Log("Warning: running this test writes to your local IPFS block store!")
 
@@ -133,7 +152,7 @@ func TestDagPutWithPlugin(t *testing.T) {
 	}
 	// convert Nmt tree root to CID and verify it matches the CID returned by DagPut
 	treeRootBytes := n.Root().Bytes()
-	nmtCid, err := cidFromNamespacedSha256(treeRootBytes)
+	nmtCid, err := CidFromNamespacedSha256(treeRootBytes)
 	if err != nil {
 		t.Fatalf("cidFromNamespacedSha256() failed: %v", err)
 	}
@@ -155,6 +174,14 @@ func TestDagPutWithPlugin(t *testing.T) {
 		}
 	}
 }
+
+// func TestfNodeGeneration(t *testing.T) {
+// 	// I don't think some of the ipld nodes are being generated correctly, as
+// 	// they're filled with a shitload of 7s. That could be because of empty
+// 	// data, but I don't think so. I'm fairly certian that cid data
+// 	leaves := generateRandNamespacedRawData(100, namespaceSize, shareSize)
+
+// }
 
 func generateExtendedRow(t *testing.T) [][]byte {
 	origData := generateRandNamespacedRawData(16, namespaceSize, shareSize)

@@ -3,6 +3,7 @@ package nodes
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -188,6 +189,41 @@ func prependNode(newNode node.Node, nodes []node.Node) []node.Node {
 	return nodes
 }
 
+type NmtNodeAdder struct {
+	batch *format.Batch
+	ctx   context.Context
+}
+
+func NewNmtNodeAdder(ctx context.Context, batch *format.Batch) *NmtNodeAdder {
+	return &NmtNodeAdder{
+		batch: batch,
+		ctx:   ctx,
+	}
+}
+
+func (n *NmtNodeAdder) Visit(hash []byte, children ...[]byte) {
+	cid := mustCidFromNamespacedSha256(hash)
+	switch len(children) {
+	case 1:
+		n.batch.Add(n.ctx, nmtLeafNode{
+			cid:  cid,
+			Data: children[0],
+		})
+	case 2:
+		n.batch.Add(n.ctx, nmtNode{
+			cid: cid,
+			l:   children[0],
+			r:   children[1],
+		})
+	default:
+		panic("expected a binary tree")
+	}
+}
+
+func (n *NmtNodeAdder) Batch() *format.Batch {
+	return n.batch
+}
+
 func NmtNodeParser(block blocks.Block) (node.Node, error) {
 	// length of the domain separator for leaf and inner nodes:
 	const prefixOffset = 1
@@ -257,13 +293,13 @@ func (n nmtNode) Loggable() map[string]interface{} {
 func (n nmtNode) Resolve(path []string) (interface{}, []string, error) {
 	switch path[0] {
 	case "0":
-		left, err := cidFromNamespacedSha256(n.l)
+		left, err := CidFromNamespacedSha256(n.l)
 		if err != nil {
 			return nil, nil, err
 		}
 		return &node.Link{Cid: left}, path[1:], nil
 	case "1":
-		right, err := cidFromNamespacedSha256(n.r)
+		right, err := CidFromNamespacedSha256(n.r)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -388,7 +424,7 @@ func (l nmtLeafNode) Size() (uint64, error) {
 	return 0, nil
 }
 
-func cidFromNamespacedSha256(namespacedHash []byte) (cid.Cid, error) {
+func CidFromNamespacedSha256(namespacedHash []byte) (cid.Cid, error) {
 	if got, want := len(namespacedHash), nmtHashSize; got != want {
 		return cid.Cid{}, fmt.Errorf("invalid namespaced hash length, got: %v, want: %v", got, want)
 	}
@@ -402,7 +438,7 @@ func cidFromNamespacedSha256(namespacedHash []byte) (cid.Cid, error) {
 // mustCidFromNamespacedSha256 is a wrapper around cidFromNamespacedSha256 that panics
 // in case of an error. Use with care and only in places where no error should occur.
 func mustCidFromNamespacedSha256(hash []byte) cid.Cid {
-	cid, err := cidFromNamespacedSha256(hash)
+	cid, err := CidFromNamespacedSha256(hash)
 	if err != nil {
 		panic(
 			fmt.Sprintf("malformed hash: %s, codec: %v",
