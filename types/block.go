@@ -97,6 +97,32 @@ func (dah *DataAvailabilityHeader) String() string {
 	return fmt.Sprintf("%X", dah.Hash())
 }
 
+// ValidateBasic runs stateless checks on the DataAvailabilityHeader. Calls Hash() if not already called
+func (dah *DataAvailabilityHeader) ValidateBasic() error {
+	if dah == nil {
+		return errors.New("nil header is invalid")
+	}
+	if dah.IsZero() {
+		return errors.New("must have at least one row and column roots")
+	}
+	if len(dah.ColumnRoots) != len(dah.RowsRoots) {
+		return fmt.Errorf(
+			"unequal number of row and column roots: row %d col %d",
+			len(dah.RowsRoots),
+			len(dah.ColumnRoots),
+		)
+	}
+	if len(dah.hash) == 0 {
+		dah.Hash()
+	}
+
+	return nil
+}
+
+func (dah *DataAvailabilityHeader) IsZero() bool {
+	return len(dah.ColumnRoots) == 0 || len(dah.RowsRoots) == 0
+}
+
 // Equals checks equality of two DAHeaders.
 func (dah *DataAvailabilityHeader) Equals(to *DataAvailabilityHeader) bool {
 	return bytes.Equal(dah.Hash(), to.Hash())
@@ -105,7 +131,8 @@ func (dah *DataAvailabilityHeader) Equals(to *DataAvailabilityHeader) bool {
 // Hash computes and caches the merkle root of the row and column roots.
 func (dah *DataAvailabilityHeader) Hash() []byte {
 	if dah == nil {
-		return merkle.HashFromByteSlices(nil)
+		dah.hash = merkle.HashFromByteSlices(nil)
+		return dah.hash
 	}
 	if len(dah.hash) != 0 {
 		return dah.hash
@@ -1640,14 +1667,16 @@ func (data *EvidenceData) splitIntoShares() NamespacedShares {
 
 // BlockID
 type BlockID struct {
-	Hash          tmbytes.HexBytes `json:"hash"`
-	PartSetHeader PartSetHeader    `json:"part_set_header"`
+	Hash                   tmbytes.HexBytes        `json:"hash"`
+	PartSetHeader          PartSetHeader           `json:"part_set_header"`
+	DataAvailabilityHeader *DataAvailabilityHeader `json:"data_availability_header"` // do we need json here?
 }
 
 // Equals returns true if the BlockID matches the given BlockID
 func (blockID BlockID) Equals(other BlockID) bool {
 	return bytes.Equal(blockID.Hash, other.Hash) &&
-		blockID.PartSetHeader.Equals(other.PartSetHeader)
+		blockID.PartSetHeader.Equals(other.PartSetHeader) &&
+		blockID.DataAvailabilityHeader.Equals(other.DataAvailabilityHeader)
 }
 
 // Key returns a machine-readable string representation of the BlockID
@@ -1658,7 +1687,16 @@ func (blockID BlockID) Key() string {
 		panic(err)
 	}
 
-	return string(blockID.Hash) + string(bz)
+	pbdah, err := blockID.DataAvailabilityHeader.ToProto()
+	if err != nil {
+		panic(err)
+	}
+	dabz, err := pbdah.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	return string(blockID.Hash) + string(bz) + string(dabz)
 }
 
 // ValidateBasic performs basic validation.
@@ -1670,20 +1708,26 @@ func (blockID BlockID) ValidateBasic() error {
 	if err := blockID.PartSetHeader.ValidateBasic(); err != nil {
 		return fmt.Errorf("wrong PartSetHeader: %v", err)
 	}
+	if err := blockID.DataAvailabilityHeader.ValidateBasic(); err != nil {
+		return fmt.Errorf("wrong data availability header")
+	}
 	return nil
 }
 
 // IsZero returns true if this is the BlockID of a nil block.
 func (blockID BlockID) IsZero() bool {
 	return len(blockID.Hash) == 0 &&
-		blockID.PartSetHeader.IsZero()
+		blockID.PartSetHeader.IsZero() &&
+		blockID.DataAvailabilityHeader.IsZero()
 }
 
 // IsComplete returns true if this is a valid BlockID of a non-nil block.
 func (blockID BlockID) IsComplete() bool {
 	return len(blockID.Hash) == tmhash.Size &&
 		blockID.PartSetHeader.Total > 0 &&
-		len(blockID.PartSetHeader.Hash) == tmhash.Size
+		len(blockID.PartSetHeader.Hash) == tmhash.Size &&
+		len(blockID.DataAvailabilityHeader.hash) == tmhash.Size &&
+		!blockID.DataAvailabilityHeader.IsZero()
 }
 
 // String returns a human readable string representation of the BlockID.
@@ -1693,7 +1737,7 @@ func (blockID BlockID) IsComplete() bool {
 //
 // See PartSetHeader#String
 func (blockID BlockID) String() string {
-	return fmt.Sprintf(`%v:%v`, blockID.Hash, blockID.PartSetHeader)
+	return fmt.Sprintf(`%v:%v:%v`, blockID.Hash, blockID.PartSetHeader, blockID.DataAvailabilityHeader)
 }
 
 // ToProto converts BlockID to protobuf
@@ -1702,9 +1746,15 @@ func (blockID *BlockID) ToProto() tmproto.BlockID {
 		return tmproto.BlockID{}
 	}
 
+	dah, err := blockID.DataAvailabilityHeader.ToProto()
+	if err != nil {
+		panic(err)
+	}
+
 	return tmproto.BlockID{
-		Hash:          blockID.Hash,
-		PartSetHeader: blockID.PartSetHeader.ToProto(),
+		Hash:                   blockID.Hash,
+		PartSetHeader:          blockID.PartSetHeader.ToProto(),
+		DataAvailabilityHeader: dah,
 	}
 }
 

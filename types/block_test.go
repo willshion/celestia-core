@@ -196,7 +196,7 @@ func makeBlockIDRandom() BlockID {
 	)
 	rand.Read(blockHash)
 	rand.Read(partSetHash)
-	return BlockID{blockHash, PartSetHeader{123, partSetHash}}
+	return BlockID{blockHash, PartSetHeader{123, partSetHash}, makeDAHeaderRandom()}
 }
 
 func makeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) BlockID {
