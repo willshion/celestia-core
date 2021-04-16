@@ -10,14 +10,11 @@ import (
 	"github.com/ipfs/go-cid"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
+	"github.com/lazyledger/rsmt2d"
+
 	"github.com/lazyledger/lazyledger-core/p2p/ipld/plugin/nodes"
 	"github.com/lazyledger/lazyledger-core/types"
-	"github.com/lazyledger/rsmt2d"
 )
-
-// //////////////////////////////////////
-//	Retrieve Block Data
-// ////////////////////////////////////
 
 const baseErrorMsg = "failure to retrieve block data:"
 
@@ -30,7 +27,7 @@ func RetrieveBlockData(
 	ctx context.Context,
 	dah *types.DataAvailabilityHeader,
 	api coreiface.CoreAPI,
-	codec rsmt2d.CodecType,
+	codec rsmt2d.Codec,
 ) (types.Data, error) {
 	edsWidth := len(dah.RowsRoots)
 	sc := newshareCounter(ctx, uint32(edsWidth))
@@ -217,10 +214,6 @@ func (sc *shareCounter) flatten() [][]byte {
 	}
 	return flattended
 }
-
-// //////////////////////////////////////
-//	Get Leaf Data
-// ////////////////////////////////////
 
 // GetLeafData fetches and returns the data for leaf leafIndex of root rootCid.
 // It stops and returns an error if the provided context is cancelled before
