@@ -5,7 +5,6 @@ import (
 	// number generator here and we can run the tests a bit faster
 	stdbytes "bytes"
 	"context"
-	"encoding/hex"
 	"math"
 	"math/rand"
 	"os"
@@ -212,6 +211,7 @@ func makeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) BlockID {
 			Total: partSetSize,
 			Hash:  psH,
 		},
+		DataAvailabilityHeader: MinDataAvailabilityHeader(),
 	}
 }
 
@@ -245,6 +245,16 @@ func TestEmptyBlockData(t *testing.T) {
 	blockData := Data{}
 	shares, _ := blockData.ComputeShares()
 	assert.Equal(t, GenerateTailPaddingShares(MinSquareSize, ShareSize), shares)
+}
+
+func Test_emptyDataAvailabilityHeader(t *testing.T) {
+	blockData := Data{}
+	block := Block{
+		Data:       blockData,
+		LastCommit: &Commit{},
+	}
+	block.fillDataAvailabilityHeader()
+	assert.Equal(t, &block.DataAvailabilityHeader, MinDataAvailabilityHeader())
 }
 
 func TestCommit(t *testing.T) {
@@ -315,6 +325,7 @@ func TestMaxCommitBytes(t *testing.T) {
 				Total: math.MaxInt32,
 				Hash:  tmhash.Sum([]byte("blockID_part_set_header_hash")),
 			},
+			DataAvailabilityHeader: MinDataAvailabilityHeader(),
 		},
 		Signatures: []CommitSig{cs},
 	}
@@ -468,14 +479,6 @@ func randCommit(now time.Time) *Commit {
 	return commit
 }
 
-func hexBytesFromString(s string) bytes.HexBytes {
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return bytes.HexBytes(b)
-}
-
 func TestBlockMaxDataBytes(t *testing.T) {
 	testCases := []struct {
 		maxBytes      int64
@@ -627,6 +630,7 @@ func TestBlockIDValidateBasic(t *testing.T) {
 			Total: 1,
 			Hash:  bytes.HexBytes{},
 		},
+		DataAvailabilityHeader: MinDataAvailabilityHeader(),
 	}
 
 	invalidBlockID := BlockID{
@@ -635,6 +639,7 @@ func TestBlockIDValidateBasic(t *testing.T) {
 			Total: 1,
 			Hash:  []byte{0},
 		},
+		DataAvailabilityHeader: MinDataAvailabilityHeader(),
 	}
 
 	testCases := []struct {
@@ -652,8 +657,9 @@ func TestBlockIDValidateBasic(t *testing.T) {
 		tc := tc
 		t.Run(tc.testName, func(t *testing.T) {
 			blockID := BlockID{
-				Hash:          tc.blockIDHash,
-				PartSetHeader: tc.blockIDPartSetHeader,
+				Hash:                   tc.blockIDHash,
+				PartSetHeader:          tc.blockIDPartSetHeader,
+				DataAvailabilityHeader: MinDataAvailabilityHeader(),
 			}
 			assert.Equal(t, tc.expectErr, blockID.ValidateBasic() != nil, "Validate Basic had an unexpected result")
 		})
@@ -1031,6 +1037,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size+1),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 			},
 			true, "wrong PartSetHeader",
@@ -1046,6 +1053,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash: make([]byte, tmhash.Size+1),
 			},
@@ -1062,6 +1070,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash: make([]byte, tmhash.Size),
 				DataHash:       make([]byte, tmhash.Size+1),
@@ -1079,6 +1088,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash: make([]byte, tmhash.Size),
 				DataHash:       make([]byte, tmhash.Size),
@@ -1097,6 +1107,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:  make([]byte, tmhash.Size),
 				DataHash:        make([]byte, tmhash.Size),
@@ -1116,6 +1127,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:  make([]byte, tmhash.Size),
 				DataHash:        make([]byte, tmhash.Size),
@@ -1136,6 +1148,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:     make([]byte, tmhash.Size),
 				DataHash:           make([]byte, tmhash.Size),
@@ -1157,6 +1170,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:     make([]byte, tmhash.Size),
 				DataHash:           make([]byte, tmhash.Size),
@@ -1179,6 +1193,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:     make([]byte, tmhash.Size),
 				DataHash:           make([]byte, tmhash.Size),
@@ -1202,6 +1217,7 @@ func TestHeader_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				LastCommitHash:     make([]byte, tmhash.Size),
 				DataHash:           make([]byte, tmhash.Size),
@@ -1268,6 +1284,7 @@ func TestCommit_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				HeaderHash: make([]byte, tmhash.Size),
 			},
@@ -1283,6 +1300,7 @@ func TestCommit_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				Signatures: []CommitSig{
 					{
@@ -1305,6 +1323,7 @@ func TestCommit_ValidateBasic(t *testing.T) {
 					PartSetHeader: PartSetHeader{
 						Hash: make([]byte, tmhash.Size),
 					},
+					DataAvailabilityHeader: MinDataAvailabilityHeader(),
 				},
 				Signatures: []CommitSig{
 					{

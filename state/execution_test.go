@@ -47,7 +47,11 @@ func TestApplyBlock(t *testing.T) {
 		mmock.Mempool{}, sm.EmptyEvidencePool{})
 
 	block := makeBlock(state, 1)
-	blockID := types.BlockID{Hash: block.Hash(), PartSetHeader: block.MakePartSet(testPartSize).Header()}
+	blockID := types.BlockID{
+		Hash:                   block.Hash(),
+		PartSetHeader:          block.MakePartSet(testPartSize).Header(),
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+	}
 
 	state, retainHeight, err := blockExec.ApplyBlock(state, blockID, block)
 	require.Nil(t, err)
@@ -71,7 +75,11 @@ func TestBeginBlockValidators(t *testing.T) {
 
 	prevHash := state.LastBlockID.Hash
 	prevParts := types.PartSetHeader{}
-	prevBlockID := types.BlockID{Hash: prevHash, PartSetHeader: prevParts}
+	prevBlockID := types.BlockID{
+		Hash:                   prevHash,
+		PartSetHeader:          prevParts,
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+	}
 
 	var (
 		now        = tmtime.Now()
@@ -380,7 +388,11 @@ func TestEndBlockValidatorUpdates(t *testing.T) {
 	require.NoError(t, err)
 
 	block := makeBlock(state, 1)
-	blockID := types.BlockID{Hash: block.Hash(), PartSetHeader: block.MakePartSet(testPartSize).Header()}
+	blockID := types.BlockID{
+		Hash:                   block.Hash(),
+		PartSetHeader:          block.MakePartSet(testPartSize).Header(),
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+	}
 
 	pubkey := ed25519.GenPrivKey().PubKey()
 	pk, err := cryptoenc.PubKeyToProto(pubkey)
@@ -436,7 +448,11 @@ func TestEndBlockValidatorUpdatesResultingInEmptySet(t *testing.T) {
 	)
 
 	block := makeBlock(state, 1)
-	blockID := types.BlockID{Hash: block.Hash(), PartSetHeader: block.MakePartSet(testPartSize).Header()}
+	blockID := types.BlockID{
+		Hash:                   block.Hash(),
+		PartSetHeader:          block.MakePartSet(testPartSize).Header(),
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+	}
 
 	vp, err := cryptoenc.PubKeyToProto(state.Validators.Validators[0].PubKey)
 	require.NoError(t, err)
@@ -463,5 +479,6 @@ func makeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) types.Bloc
 			Total: partSetSize,
 			Hash:  psH,
 		},
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
 	}
 }

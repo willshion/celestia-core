@@ -181,6 +181,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 ) (State, int64, error) {
 
 	if err := validateBlock(state, block); err != nil {
+		fmt.Println("failure during validating block")
 		return state, 0, ErrInvalidBlock(err)
 	}
 

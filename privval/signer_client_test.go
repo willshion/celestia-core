@@ -119,20 +119,28 @@ func TestSignerProposal(t *testing.T) {
 		ts := time.Now()
 		hash := tmrand.Bytes(tmhash.Size)
 		have := &types.Proposal{
-			Type:      tmproto.ProposalType,
-			Height:    1,
-			Round:     2,
-			POLRound:  2,
-			BlockID:   types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:     tmproto.ProposalType,
+			Height:   1,
+			Round:    2,
+			POLRound: 2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp: ts,
 			DAHeader:  &types.DataAvailabilityHeader{},
 		}
 		want := &types.Proposal{
-			Type:      tmproto.ProposalType,
-			Height:    1,
-			Round:     2,
-			POLRound:  2,
-			BlockID:   types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:     tmproto.ProposalType,
+			Height:   1,
+			Round:    2,
+			POLRound: 2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp: ts,
 			DAHeader:  &types.DataAvailabilityHeader{},
 		}
@@ -169,20 +177,28 @@ func TestSignerVote(t *testing.T) {
 		hash := tmrand.Bytes(tmhash.Size)
 		valAddr := tmrand.Bytes(crypto.AddressSize)
 		want := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
 		}
 
 		have := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
@@ -213,20 +229,28 @@ func TestSignerVoteResetDeadline(t *testing.T) {
 		hash := tmrand.Bytes(tmhash.Size)
 		valAddr := tmrand.Bytes(crypto.AddressSize)
 		want := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
 		}
 
 		have := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
@@ -267,20 +291,28 @@ func TestSignerVoteKeepAlive(t *testing.T) {
 		hash := tmrand.Bytes(tmhash.Size)
 		valAddr := tmrand.Bytes(crypto.AddressSize)
 		want := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
 		}
 
 		have := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,
@@ -335,11 +367,15 @@ func TestSignerSignProposalErrors(t *testing.T) {
 		ts := time.Now()
 		hash := tmrand.Bytes(tmhash.Size)
 		proposal := &types.Proposal{
-			Type:      tmproto.ProposalType,
-			Height:    1,
-			Round:     2,
-			POLRound:  2,
-			BlockID:   types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:     tmproto.ProposalType,
+			Height:   1,
+			Round:    2,
+			POLRound: 2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp: ts,
 			Signature: []byte("signature"),
 			DAHeader:  &types.DataAvailabilityHeader{},
@@ -368,10 +404,14 @@ func TestSignerSignVoteErrors(t *testing.T) {
 		hash := tmrand.Bytes(tmhash.Size)
 		valAddr := tmrand.Bytes(crypto.AddressSize)
 		vote := &types.Vote{
-			Type:             tmproto.PrecommitType,
-			Height:           1,
-			Round:            2,
-			BlockID:          types.BlockID{Hash: hash, PartSetHeader: types.PartSetHeader{Hash: hash, Total: 2}},
+			Type:   tmproto.PrecommitType,
+			Height: 1,
+			Round:  2,
+			BlockID: types.BlockID{
+				Hash:                   hash,
+				PartSetHeader:          types.PartSetHeader{Hash: hash, Total: 2},
+				DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
+			},
 			Timestamp:        ts,
 			ValidatorAddress: valAddr,
 			ValidatorIndex:   1,

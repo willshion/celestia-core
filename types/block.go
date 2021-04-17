@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -131,8 +132,7 @@ func (dah *DataAvailabilityHeader) Equals(to *DataAvailabilityHeader) bool {
 // Hash computes and caches the merkle root of the row and column roots.
 func (dah *DataAvailabilityHeader) Hash() []byte {
 	if dah == nil {
-		dah.hash = merkle.HashFromByteSlices(nil)
-		return dah.hash
+		dah = MinDataAvailabilityHeader()
 	}
 	if len(dah.hash) != 0 {
 		return dah.hash
@@ -153,9 +153,49 @@ func (dah *DataAvailabilityHeader) Hash() []byte {
 	return dah.hash
 }
 
+// MinDataAvailabilityHeader returns a hard coded copy of an data availability
+// header from empty block data
+func MinDataAvailabilityHeader() *DataAvailabilityHeader {
+	first, err := namespace.IntervalDigestFromBytes(
+		NamespaceSize,
+		hexBytesFromString("fffffffffffffffefffffffffffffffe669aa8f0d85221a05b6f0917884d30616a6c7d5330a5640a08a04dcc5b092f4f"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	second, err := namespace.IntervalDigestFromBytes(
+		NamespaceSize,
+		hexBytesFromString("ffffffffffffffffffffffffffffffff293437f3b6a5611e25c90d5a44b84cc4b3720cdba68553defe8b719af1f5c395"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	dah := &DataAvailabilityHeader{
+		RowsRoots: []namespace.IntervalDigest{
+			first, second,
+		},
+		ColumnRoots: []namespace.IntervalDigest{
+			first, second,
+		},
+		hash: []byte{
+			4, 122, 211, 141, 172, 30, 22, 215, 241, 73, 77, 225, 174, 40, 53, 252, 106, 158, 117, 238,
+			88, 77, 86, 66, 235, 146, 121, 62, 161, 36, 160, 111,
+		},
+	}
+	return dah
+}
+
+func hexBytesFromString(s string) tmbytes.HexBytes {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return tmbytes.HexBytes(b)
+}
+
 func (dah *DataAvailabilityHeader) ToProto() (*tmproto.DataAvailabilityHeader, error) {
 	if dah == nil {
-		return nil, errors.New("nil DataAvailabilityHeader")
+		dah = MinDataAvailabilityHeader()
 	}
 
 	dahp := new(tmproto.DataAvailabilityHeader)
@@ -1777,8 +1817,14 @@ func BlockIDFromProto(bID *tmproto.BlockID) (*BlockID, error) {
 		return nil, err
 	}
 
+	dah, err := DataAvailabilityHeaderFromProto(bID.DataAvailabilityHeader)
+	if err != nil {
+		return nil, err
+	}
+
 	blockID.PartSetHeader = *ph
 	blockID.Hash = bID.Hash
+	blockID.DataAvailabilityHeader = dah
 
 	return blockID, blockID.ValidateBasic()
 }

@@ -49,11 +49,13 @@ func BlockMetaFromProto(pb *tmproto.BlockMeta) (*BlockMeta, error) {
 
 	bi, err := BlockIDFromProto(&pb.BlockID)
 	if err != nil {
+		fmt.Println("returning id from proto")
 		return nil, err
 	}
 
 	h, err := HeaderFromProto(&pb.Header)
 	if err != nil {
+		fmt.Println("returning header from proto")
 		return nil, err
 	}
 

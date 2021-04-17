@@ -193,6 +193,10 @@ func (bs *BlockStore) LoadBlockMeta(height int64) *types.BlockMeta {
 		panic(fmt.Errorf("error from proto blockMeta: %w", err))
 	}
 
+	if blockMeta.BlockID.DataAvailabilityHeader == nil {
+		blockMeta.BlockID.DataAvailabilityHeader = types.MinDataAvailabilityHeader()
+	}
+
 	return blockMeta
 }
 

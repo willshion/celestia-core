@@ -80,8 +80,9 @@ func (pkz privKeys) signHeader(header *types.Header, valSet *types.ValidatorSet,
 	}
 
 	blockID := types.BlockID{
-		Hash:          header.Hash(),
-		PartSetHeader: types.PartSetHeader{Total: 1, Hash: crypto.CRandBytes(32)},
+		Hash:                   header.Hash(),
+		PartSetHeader:          types.PartSetHeader{Total: 1, Hash: crypto.CRandBytes(32)},
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
 	}
 
 	// Fill in the votes we want.

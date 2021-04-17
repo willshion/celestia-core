@@ -120,7 +120,12 @@ func newBlockchainReactor(
 		thisBlock := makeBlock(blockHeight, state, lastCommit)
 
 		thisParts := thisBlock.MakePartSet(types.BlockPartSizeBytes)
-		blockID := types.BlockID{Hash: thisBlock.Hash(), PartSetHeader: thisParts.Header()}
+		blockID := types.BlockID{
+			Hash:                   thisBlock.Hash(),
+			PartSetHeader:          thisParts.Header(),
+			DataAvailabilityHeader: &thisBlock.DataAvailabilityHeader,
+		}
+		thisBlock.Hash()
 
 		state, _, err = blockExec.ApplyBlock(state, blockID, thisBlock)
 		if err != nil {

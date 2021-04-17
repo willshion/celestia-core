@@ -324,6 +324,7 @@ func exampleVote(t byte) *types.Vote {
 				Total: 1000000,
 				Hash:  tmhash.Sum([]byte("blockID_part_set_header_hash")),
 			},
+			DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
 		},
 		ValidatorAddress: crypto.AddressHash([]byte("validator_address")),
 		ValidatorIndex:   56789,

@@ -254,6 +254,8 @@ func (state State) MakeBlock(
 		timestamp = MedianTime(commit, state.LastValidators)
 	}
 
+	state.LastBlockID.DataAvailabilityHeader = types.MinDataAvailabilityHeader()
+
 	// Fill rest of header with state data.
 	block.Header.Populate(
 		state.Version.Consensus, state.ChainID,

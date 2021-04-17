@@ -437,6 +437,7 @@ func TestMaxProposalBlockSize(t *testing.T) {
 			Total: math.MaxInt32,
 			Hash:  tmhash.Sum([]byte("blockID_part_set_header_hash")),
 		},
+		DataAvailabilityHeader: types.MinDataAvailabilityHeader(),
 	}
 
 	timestamp := time.Date(math.MaxInt64, 0, 0, 0, 0, 0, math.MaxInt64, time.UTC)
