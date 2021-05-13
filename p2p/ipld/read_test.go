@@ -20,6 +20,7 @@ import (
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
 	"github.com/lazyledger/rsmt2d"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -303,6 +304,117 @@ func TestRetrieveBlockData(t *testing.T) {
 	}
 }
 
+func TestRetrieveBlockData2Nodes(t *testing.T) {
+	type test struct {
+		name       string
+		squareSize int
+		expectErr  bool
+		errStr     string
+	}
+
+	// issue two new API objects
+	net := mocknet.New(context.Background())
+	ipfsNode1, err := coremock.MockPublicNode(context.Background(), net)
+	if err != nil {
+		t.Error(err)
+	}
+	ipfsNode2, err := coremock.MockPublicNode(context.Background(), net)
+	if err != nil {
+		t.Error(err)
+	}
+	ipfsAPI1, err := coreapi.NewCoreAPI(ipfsNode1)
+	if err != nil {
+		t.Error(err)
+	}
+	ipfsAPI2, err := coreapi.NewCoreAPI(ipfsNode2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = net.LinkAll()
+	assert.NoError(t, err)
+	err = net.ConnectAllButSelf()
+	assert.NoError(t, err)
+
+	// the max size of messages that won't get split
+	adjustedMsgSize := types.MsgShareSize - 2
+
+	tests := []test{
+		{"Empty block", 1, false, ""},
+		{"4 KB block", 4, false, ""},
+		{"16 KB block", 8, false, ""},
+		{"32 KB block", 16, false, ""},
+		//{"16 KB block timeout expected", 8, true, "timeout"},
+		//{"max square size", types.MaxSquareSize, false, ""},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+
+		t.Run(fmt.Sprintf("%s size %d", tc.name, tc.squareSize), func(t *testing.T) {
+			// if we're using the race detector, skip some large tests due to time and
+			// concurrency constraints
+			if raceDetectorActive && tc.squareSize > 8 {
+				t.Skip("Not running large test due to time and concurrency constraints while race detector is active.")
+			}
+
+			background := context.Background()
+			blockData := generateRandomBlockData(tc.squareSize*tc.squareSize, adjustedMsgSize)
+			block := types.Block{
+				Data:       blockData,
+				LastCommit: &types.Commit{},
+			}
+
+			// if an error is exected, don't put the block
+			if !tc.expectErr {
+				err := block.PutBlock(background, ipfsAPI1.Dag())
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			shareData, _ := blockData.ComputeShares()
+			rawData := shareData.RawShares()
+
+			tree := NewErasuredNamespacedMerkleTree(uint64(tc.squareSize))
+			eds, err := rsmt2d.ComputeExtendedDataSquare(rawData, rsmt2d.NewRSGF8Codec(), tree.Constructor)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rawRowRoots := eds.RowRoots()
+			rawColRoots := eds.ColumnRoots()
+			rowRoots := rootsToDigests(rawRowRoots)
+			colRoots := rootsToDigests(rawColRoots)
+
+			retrievalCtx, cancel := context.WithTimeout(background, time.Second*2)
+			defer cancel()
+
+			rblockData, err := RetrieveBlockData(
+				retrievalCtx,
+				&types.DataAvailabilityHeader{
+					RowsRoots:   rowRoots,
+					ColumnRoots: colRoots,
+				},
+				ipfsAPI2,
+				rsmt2d.NewRSGF8Codec(),
+			)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errStr)
+				return
+			}
+
+			require.NoError(t, err)
+
+			nsShares, _ := rblockData.ComputeShares()
+
+			assert.Equal(t, rawData, nsShares.RawShares())
+		})
+	}
+}
+
 func flatten(eds *rsmt2d.ExtendedDataSquare) [][]byte {
 	flattenedEDSSize := eds.Width() * eds.Width()
 	out := make([][]byte, flattenedEDSSize)
@@ -323,7 +435,7 @@ func getNmtRoot(
 	namespacedData [][]byte,
 ) (namespace.IntervalDigest, error) {
 	na := nodes.NewNmtNodeAdder(ctx, batch)
-	tree := nmt.New(sha256.New(), nmt.NamespaceIDSize(types.NamespaceSize), nmt.NodeVisitor(na.Visit))
+	tree := nmt.New(sha256.New, nmt.NamespaceIDSize(types.NamespaceSize), nmt.NodeVisitor(na.Visit))
 	for _, leaf := range namespacedData {
 		err := tree.Push(leaf)
 		if err != nil {
