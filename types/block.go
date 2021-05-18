@@ -320,9 +320,9 @@ func (b *Block) PutBlock(ctx context.Context, nodeAdder format.NodeAdder) error 
 
 	// create nmt adder wrapping batch adder
 	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, nodeAdder))
-
+	squareWidth := eds.Width()
 	// iterate through each set of col and row leaves
-	for _, leafSet := range leaves {
+	for i, leafSet := range leaves {
 		tree := nmt.New(sha256.New(), nmt.NodeVisitor(batchAdder.Visit))
 		for _, share := range leafSet {
 			err = tree.Push(share)
@@ -332,7 +332,27 @@ func (b *Block) PutBlock(ctx context.Context, nodeAdder format.NodeAdder) error 
 		}
 
 		// compute the root in order to collect the ipld.Nodes
-		tree.Root()
+		root := tree.Root()
+		rootCid, _ := nodes.CidFromNamespacedSha256(root.Bytes())
+		fmt.Println("root", rootCid)
+		// add the commitment to the header
+		if uint(i) < squareWidth {
+			if !b.DataAvailabilityHeader.ColumnRoots[i].Equal(&root) {
+				fmt.Println("b.DataAvailabilityHeader.ColumnRoots[i]")
+				fmt.Println(b.DataAvailabilityHeader.ColumnRoots[i])
+				fmt.Println(root)
+
+				panic("sth is seriously wrong(col): " + rootCid.String())
+			}
+		} else {
+			if !b.DataAvailabilityHeader.RowsRoots[uint(i)-squareWidth].Equal(&root) {
+				fmt.Println("b.DataAvailabilityHeader.RowsRoots[uint(i)-squareWidth]")
+				fmt.Println(b.DataAvailabilityHeader.RowsRoots[uint(i)-squareWidth])
+				fmt.Println(root)
+
+				panic("sth is seriously wrong (row): " + rootCid.String())
+			}
+		}
 	}
 
 	// commit the batch to ipfs
