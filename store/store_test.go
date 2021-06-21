@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"os"
@@ -58,9 +59,13 @@ func makeTxs(height int64) (txs []types.Tx) {
 }
 
 func makeBlock(height int64, state sm.State, lastCommit *types.Commit) *types.Block {
-	block, _ := state.MakeBlock(height, makeTxs(height), nil,
+	b := state.MakeBlock(height, makeTxs(height), nil,
 		nil, types.Messages{}, lastCommit, state.Validators.GetProposer().Address)
-	return block
+	_, err := b.RowSet(context.TODO(), mdutils.Mock())
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func makeStateAndBlockStore(logger log.Logger) (sm.State, *BlockStore, cleanupFunc) {
