@@ -9,7 +9,7 @@ import (
 	"github.com/ipfs/go-cid"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
-	"github.com/lazyledger/lazyledger-core/p2p/ipld/plugin/nodes"
+	"github.com/lazyledger/lazyledger-core/ipfs/plugin"
 	"github.com/lazyledger/lazyledger-core/types"
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
@@ -45,7 +45,7 @@ func rowRootsFromNamespaceID(nID namespace.ID, dah *types.DataAvailabilityHeader
 	roots := make([]int, 0)
 	for i, row := range dah.RowsRoots {
 		// if nID exists within range of min -> max of row, return the row
-		if !nID.Less(row.Min()) && nID.LessOrEqual(row.Max()) {
+		if !nID.Less(row.Min) && nID.LessOrEqual(row.Max) {
 			roots = append(roots, i)
 		}
 	}
@@ -54,9 +54,9 @@ func rowRootsFromNamespaceID(nID namespace.ID, dah *types.DataAvailabilityHeader
 	}
 	// return min or max index depending on if nID is below the minimum namespace ID or exceeds the maximum
 	// namespace ID of the given DataAvailabilityHeader
-	if nID.Less(dah.RowsRoots[0].Min()) {
+	if nID.Less(dah.RowsRoots[0].Min) {
 		return []int{0}, ErrBelowRange
-	} else if !nID.LessOrEqual(dah.RowsRoots[len(dah.RowsRoots)-1].Max()) {
+	} else if !nID.LessOrEqual(dah.RowsRoots[len(dah.RowsRoots)-1].Max) {
 		max := len(dah.RowsRoots) - 1
 		return []int{max}, ErrExceedsRange // TODO still need to figure out what kind of info to return as a part of the err
 	}
@@ -74,7 +74,7 @@ func getSharesByNamespace(
 	for i, index := range rowIndices {
 		isLastRow := i == len(rowIndices)-1
 		// compute the root CID from the DAH
-		rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[index].Bytes())
+		rootCid, err := plugin.CidFromNamespacedSha256(dah.RowsRoots[index].Bytes())
 		if err != nil {
 			return shares, err
 		}
@@ -90,7 +90,7 @@ func getSharesByNamespace(
 			continue
 		}
 		for {
-			leaf, err := GetLeafData(ctx, rootCid, uint32(startingIndex), uint32(len(dah.RowsRoots)), api)
+			leaf, err := GetLeafData(ctx, rootCid, uint32(startingIndex), uint32(len(dah.RowsRoots)), api.Dag())
 			if err != nil {
 				return shares, err
 			}
@@ -189,47 +189,5 @@ func startIndexFromPath(path []string) int {
 }
 
 func intervalContains(nID namespace.ID, intvlDigest namespace.IntervalDigest) bool {
-	return !nID.Less(intvlDigest.Min()) && nID.LessOrEqual(intvlDigest.Max())
-}
-
-func walk(
-	ctx context.Context,
-	nID namespace.ID,
-	dah *types.DataAvailabilityHeader,
-	rootCid cid.Cid,
-	api coreiface.CoreAPI) ([]byte, error) {
-	var (
-		data         []byte
-		currentIndex = uint32(len(dah.RowsRoots) / 2) // start in the middle // TODO
-	)
-	for {
-		lPath, err := leafPath(currentIndex, uint32(len(dah.RowsRoots)))
-		if err != nil {
-			return data, err
-		}
-
-		node, err := api.ResolveNode(ctx, path.Join(path.IpldPath(rootCid), lPath...))
-		if err != nil {
-			return data, err
-		}
-
-		// convert node into interval digest so we can get the min/max ID for that leaf
-		nodeHash := node.Cid().Hash()[4:] // IPFS prepends 4 bytes to the data that it stores, so ignore first 4 bytes
-		digest, err := namespace.IntervalDigestFromBytes(nmt.DefaultNamespaceIDLen, nodeHash)
-		if err != nil {
-			return data, err
-		}
-
-		if !nID.Less(digest.Min()) && nID.LessOrEqual(digest.Max()) {
-			return node.RawData()[1:], nil
-		}
-		if nID.Less(digest.Min()) {
-			// go left
-			currentIndex--
-		}
-		if !nID.LessOrEqual(digest.Max()) {
-			// go right
-			currentIndex++
-		}
-	}
+	return !nID.Less(intvlDigest.Min) && nID.LessOrEqual(intvlDigest.Max)
 }

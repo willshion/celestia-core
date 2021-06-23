@@ -4,16 +4,19 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/ipfs/interface-go-ipfs-core/path"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/ipfs/go-ipfs/core/coreapi"
+	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	format "github.com/ipfs/go-ipld-format"
-	"github.com/lazyledger/lazyledger-core/p2p/ipld/plugin/nodes"
+	"github.com/lazyledger/lazyledger-core/ipfs"
+	"github.com/lazyledger/lazyledger-core/ipfs/plugin"
 	"github.com/lazyledger/lazyledger-core/types"
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
@@ -34,7 +37,7 @@ func Test_rowRootsFromNamespaceID(t *testing.T) {
 
 	expected := make([]int, 0)
 	for i, row := range dah.RowsRoots {
-		if !namespace.ID(nID).Less(row.Min()) && namespace.ID(nID).LessOrEqual(row.Max()) {
+		if !namespace.ID(nID).Less(row.Min) && namespace.ID(nID).LessOrEqual(row.Max) {
 			expected = append(expected, i)
 		}
 	}
@@ -47,11 +50,11 @@ func Test_unsuccessful_rowRootsFromNamespaceID(t *testing.T) {
 	nIDBelow := make([]byte, 8)
 	for i, byt := range data[0][:8] {
 		// assuming the data is never 0
-		nIDBelow[i] = byt-1
+		nIDBelow[i] = byt - 1
 	}
 	nIDExceeds := make([]byte, 8)
 	for i, byt := range data[len(data)-1][:8] {
-		nIDExceeds[i] = byt+1
+		nIDExceeds[i] = byt + 1
 	}
 
 	dah, err := makeDAHeader(data)
@@ -69,9 +72,9 @@ func Test_unsuccessful_rowRootsFromNamespaceID(t *testing.T) {
 
 	assert.Equal(t, 1, len(indicesExceeds))
 	assert.Equal(t, len(data)-1, indicesExceeds[0])
+	require.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "exceeds maximum"))
 }
-
 
 func makeDAHeader(data [][]byte) (*types.DataAvailabilityHeader, error) {
 	rows, err := types.NmtRootsFromBytes(data)
@@ -91,7 +94,8 @@ func makeDAHeader(data [][]byte) (*types.DataAvailabilityHeader, error) {
 
 func TestRetrieveShares(t *testing.T) {
 	// set nID
-	api := mockedIpfsAPI(t)
+	ipfsAPI := mockedIpfsAPI(t)
+
 	treeRoots := make(types.NmtRoots, 0)
 	ctx := context.Background()
 
@@ -101,7 +105,7 @@ func TestRetrieveShares(t *testing.T) {
 	)
 
 	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
+	batchAdder := NewNmtNodeAdder(ctx, format.NewBatch(ctx, ipfsAPI.Dag()))
 
 	for i := 0; i < 4; i++ {
 		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
@@ -128,7 +132,7 @@ func TestRetrieveShares(t *testing.T) {
 		RowsRoots: treeRoots,
 	}
 
-	shares, err := RetrieveShares(ctx, nID, dah, api)
+	shares, err := RetrieveShares(ctx, nID, dah, ipfsAPI)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,66 +142,10 @@ func TestRetrieveShares(t *testing.T) {
 	assert.Equal(t, nIDData, shares[0])
 }
 
-func Test_walk(t *testing.T) {
-	// set nID
-	api := mockedIpfsAPI(t)
-	treeRoots := make(types.NmtRoots, 0)
-
-	ctx := context.Background()
-
-	var (
-		nIDData []byte
-		nID     []byte
-	)
-
-	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
-
-	for i := 0; i < 4; i++ {
-		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
-		fmt.Printf("%+v\n", data)
-		if len(nID) == 0 {
-			nIDData = data[rand.Intn(len(data)-1)] // todo maybe make this nicer later
-			nID = nIDData[:8]
-		}
-
-		treeRoot, err := commitTreeDataToDAG(ctx, data, batchAdder)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		treeRoots = append(treeRoots, treeRoot)
-		if err := batchAdder.Commit(); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	fmt.Println("NID DATA: ", nIDData, "nID: ", nID)
-
-	dah := &types.DataAvailabilityHeader{
-		RowsRoots: treeRoots,
-	}
-
-	rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
-	if err != nil {
-		t.Error(err)
-	}
-
-	shares, err := walk(ctx, nID, dah, rootCid, api)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("GOT: ", shares)
-	if !reflect.DeepEqual(nIDData, shares) {
-		t.Fatalf("expected %v, got %v", nIDData, shares)
-	}
-}
-
-
 // todo fix later
-func commitTreeDataToDAG(ctx context.Context, data [][]byte, batchAdder *nodes.NmtNodeAdder) (namespace.IntervalDigest, error) {
+func commitTreeDataToDAG(ctx context.Context, data [][]byte, batchAdder *NmtNodeAdder) (namespace.IntervalDigest, error) {
 
-	tree := nmt.New(sha256.New(), nmt.NodeVisitor(batchAdder.Visit)) // TODO consider changing this to default size
+	tree := nmt.New(sha256.New, nmt.NodeVisitor(batchAdder.Visit)) // TODO consider changing this to default size
 	// add some fake data
 	for _, d := range data {
 		if err := tree.Push(d); err != nil {
@@ -205,72 +153,6 @@ func commitTreeDataToDAG(ctx context.Context, data [][]byte, batchAdder *nodes.N
 		}
 	}
 	return tree.Root(), nil
-}
-
-func TestWalkTree(t *testing.T) { // TODO DELETE
-	// set nID
-	api := mockedIpfsAPI(t)
-	treeRoots := make(types.NmtRoots, 0)
-
-	ctx := context.Background()
-
-	var (
-		nIDData []byte
-		nID     []byte
-	)
-
-	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
-
-	for i := 0; i < 4; i++ {
-		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
-		fmt.Printf("%+v\n", data)
-		if len(nID) == 0 {
-			nIDData = data[rand.Intn(len(data)-1)] // todo maybe make this nicer later
-			nID = nIDData[:8]
-		}
-
-		treeRoot, err := commitTreeDataToDAG(ctx, data, batchAdder)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		treeRoots = append(treeRoots, treeRoot)
-		if err := batchAdder.Commit(); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	fmt.Println("NID DATA: ", nIDData, "\nnID: ", nID)
-
-	dah := &types.DataAvailabilityHeader{
-		RowsRoots: treeRoots,
-	}
-
-	rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
-	if err != nil {
-		t.Error(err)
-	}
-	fmt.Println("rootCID: ", rootCid)
-
-	i :=  0
-	for i < len(dah.RowsRoots) {
-		node, err := api.ResolveNode(ctx, path.Join(path.IpldPath(rootCid), "1"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		nodeHash := node.Cid().Hash()[4:] // IPFS prepends 4 bytes to the data that it stores
-		intervalDigest, err := namespace.IntervalDigestFromBytes(nmt.DefaultNamespaceIDLen, nodeHash)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fmt.Printf("min %v, max %v\n", []byte(intervalDigest.Min()), []byte(intervalDigest.Max()))
-		if namespace.ID(nID).Equal(intervalDigest.Min()) && namespace.ID(nID).Equal(intervalDigest.Max()) {
-			fmt.Println("SUCCESS!!!!!!", i)
-			return
-		}
-		i++
-	}
 }
 
 func Test_multipleLeaves_findStartingIndex(t *testing.T) {
@@ -281,16 +163,16 @@ func Test_multipleLeaves_findStartingIndex(t *testing.T) {
 
 	var (
 		leaves [][]byte
-		nID     []byte
+		nID    []byte
 	)
 
 	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
+	batchAdder := NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
 
 	for i := 0; i < 4; i++ {
 		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
 		if len(nID) == 0 {
-			index := rand.Intn(len(data)-2)
+			index := rand.Intn(len(data) - 2)
 			leaves = make([][]byte, 2)
 			for i, _ := range leaves {
 				leaves[i] = make([]byte, 24)
@@ -331,7 +213,7 @@ func Test_multipleLeaves_findStartingIndex(t *testing.T) {
 		RowsRoots: treeRoots,
 	}
 
-	rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
+	rootCid, err := plugin.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
 	if err != nil {
 		t.Error(err)
 	}
@@ -358,7 +240,7 @@ func Test_successful_findStartingIndex(t *testing.T) {
 	)
 
 	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
+	batchAdder := NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
 
 	for i := 0; i < 4; i++ {
 		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
@@ -385,7 +267,7 @@ func Test_successful_findStartingIndex(t *testing.T) {
 		RowsRoots: treeRoots,
 	}
 
-	rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
+	rootCid, err := plugin.CidFromNamespacedSha256(dah.RowsRoots[0].Bytes())
 	if err != nil {
 		t.Error(err)
 	}
@@ -398,12 +280,11 @@ func Test_successful_findStartingIndex(t *testing.T) {
 
 	fmt.Println("starting index: ", startingIndex)
 
-	leaf, err := GetLeafData(ctx, rootCid, uint32(startingIndex), uint32(len(dah.RowsRoots)), api)
+	leaf, err := GetLeafData(ctx, rootCid, uint32(startingIndex), uint32(len(dah.RowsRoots)), api.Dag())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Println("LEAF FROM PATH: ", leaf)
 	assert.Equal(t, nIDData, leaf)
 }
 
@@ -420,7 +301,7 @@ func Test_unsuccessful_findStartingIndex(t *testing.T) {
 	)
 
 	// create nmt adder wrapping batch adder
-	batchAdder := nodes.NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
+	batchAdder := NewNmtNodeAdder(ctx, format.NewBatch(ctx, api.Dag()))
 
 	for i := 0; i < 4; i++ {
 		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
@@ -448,7 +329,7 @@ func Test_unsuccessful_findStartingIndex(t *testing.T) {
 	}
 
 	// get rootCID of a row in which nID does NOT exist
-	rootCid, err := nodes.CidFromNamespacedSha256(dah.RowsRoots[2].Bytes())
+	rootCid, err := plugin.CidFromNamespacedSha256(dah.RowsRoots[2].Bytes())
 	if err != nil {
 		t.Error(err)
 	}
@@ -464,35 +345,35 @@ func Test_unsuccessful_findStartingIndex(t *testing.T) {
 
 func Test_startIndexFromPath(t *testing.T) {
 	var tests = []struct {
-		path []string
+		path     []string
 		expected int
 	}{
 		{
-			path: []string{"0", "0", "1"},
+			path:     []string{"0", "0", "1"},
 			expected: 1,
 		},
 		{
-			path: []string{"0", "1", "1", "1"},
+			path:     []string{"0", "1", "1", "1"},
 			expected: 7,
 		},
 		{
-			path: []string{"0", "0"},
+			path:     []string{"0", "0"},
 			expected: 0,
 		},
 		{
-			path: []string{"1", "1", "0"},
+			path:     []string{"1", "1", "0"},
 			expected: 6,
 		},
 		{
-			path: []string{"0", "1", "0", "1"},
+			path:     []string{"0", "1", "0", "1"},
 			expected: 5,
 		},
 		{
-			path: []string{"0", "0", "0", "0"},
+			path:     []string{"0", "0", "0", "0"},
 			expected: 0,
 		},
 		{
-			path: []string{"1", "1", "1", "1"},
+			path:     []string{"1", "1", "1", "1"},
 			expected: 15,
 		},
 	}
@@ -504,4 +385,18 @@ func Test_startIndexFromPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func mockedIpfsAPI(t *testing.T) iface.CoreAPI {
+	node, err := ipfs.Mock()()
+	if err != nil {
+		panic(err)
+	}
+
+	ipfsAPI, err := coreapi.NewCoreAPI(node)
+	if err != nil {
+		panic(err)
+	}
+
+	return ipfsAPI
 }
