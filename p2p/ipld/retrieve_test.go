@@ -283,7 +283,7 @@ func Test_multipleLeaves_findStartingIndex(t *testing.T) {
 		if len(nID) == 0 {
 			index := rand.Intn(len(data) - 2)
 			leaves = make([][]byte, 2)
-			for i, _ := range leaves {
+			for i := range leaves {
 				leaves[i] = make([]byte, 24)
 			}
 			nID = make([]byte, 8)
