@@ -23,7 +23,12 @@ var (
 )
 
 // RetrieveShares retrieves share data for the given namespace ID using the given DataAvailabilityHeader.
-func RetrieveShares(ctx context.Context, nID namespace.ID, dah *types.DataAvailabilityHeader, api coreiface.CoreAPI) ([][]byte, error) {
+func RetrieveShares(
+	ctx context.Context,
+	nID namespace.ID,
+	dah *types.DataAvailabilityHeader,
+	api coreiface.CoreAPI,
+) ([][]byte, error) {
 	// 1. Find the row root(s) that contains the namespace ID nID
 	// loop over row roots and find the root in which the nID exists within the range of root min -> root max
 	// return that row

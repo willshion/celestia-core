@@ -252,7 +252,11 @@ func TestRetrieveShares(t *testing.T) {
 }
 
 // todo fix later
-func commitTreeDataToDAG(ctx context.Context, data [][]byte, batchAdder *NmtNodeAdder) (namespace.IntervalDigest, error) {
+func commitTreeDataToDAG(
+	ctx context.Context,
+	data [][]byte,
+	batchAdder *NmtNodeAdder,
+) (namespace.IntervalDigest, error) {
 
 	tree := nmt.New(sha256.New, nmt.NodeVisitor(batchAdder.Visit)) // TODO consider changing this to default size
 	// add some fake data
