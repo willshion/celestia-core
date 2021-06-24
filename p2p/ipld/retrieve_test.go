@@ -1,6 +1,7 @@
 package ipld
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ipfs/go-ipfs/core/coreapi"
 	iface "github.com/ipfs/interface-go-ipfs-core"
@@ -17,7 +19,9 @@ import (
 	format "github.com/ipfs/go-ipld-format"
 	"github.com/lazyledger/lazyledger-core/ipfs"
 	"github.com/lazyledger/lazyledger-core/ipfs/plugin"
+	"github.com/lazyledger/lazyledger-core/libs/log"
 	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/lazyledger/lazyledger-core/types/consts"
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
 )
@@ -93,53 +97,158 @@ func makeDAHeader(data [][]byte) (*types.DataAvailabilityHeader, error) {
 }
 
 func TestRetrieveShares(t *testing.T) {
-	// set nID
-	ipfsAPI := mockedIpfsAPI(t)
+	api := mockedIpfsAPI(t)
 
-	treeRoots := make(types.NmtRoots, 0)
-	ctx := context.Background()
-
-	var (
-		nIDData []byte
-		nID     []byte
-	)
-
-	// create nmt adder wrapping batch adder
-	batchAdder := NewNmtNodeAdder(ctx, format.NewBatch(ctx, ipfsAPI.Dag()))
-
-	for i := 0; i < 4; i++ {
-		data := generateRandNamespacedRawData(4, nmt.DefaultNamespaceIDLen, 16)
-		fmt.Printf("%+v\n", data)
-		if len(nID) == 0 {
-			nIDData = data[rand.Intn(len(data)-1)]
-			nID = nIDData[:8]
-		}
-
-		treeRoot, err := commitTreeDataToDAG(ctx, data, batchAdder)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		treeRoots = append(treeRoots, treeRoot)
-		if err := batchAdder.Commit(); err != nil {
-			t.Fatal(err)
-		}
+	type test struct {
+		name                 string
+		expectedErr          error
+		nID                  []byte
+		data                 types.Data
+		startIndex, endIndex int
 	}
 
-	fmt.Println("NID DATA: ", nIDData, "nID: ", nID)
-
-	dah := &types.DataAvailabilityHeader{
-		RowsRoots: treeRoots,
+	tests := []test{
+		{
+			name: "single transaction",
+			nID:  consts.TxNamespaceID,
+			data: types.Data{
+				Txs: generateRandomContiguousShares(1),
+			},
+			startIndex: 0,
+			endIndex:   1,
+		},
+		{
+			name: "many transactions",
+			nID:  consts.TxNamespaceID,
+			data: types.Data{
+				Txs: generateRandomContiguousShares(20),
+			},
+			startIndex: 0,
+			endIndex:   20,
+		},
+		{
+			name: "single message mixed with contiguous shares",
+			nID:  []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			data: types.Data{
+				Txs: generateRandomContiguousShares(2),
+				Messages: types.Messages{
+					MessagesList: []types.Message{
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+							Data:        bytes.Repeat([]byte{1}, consts.MsgShareSize-2),
+						},
+					},
+				},
+			},
+			startIndex: 2,
+			endIndex:   3,
+		},
+		{
+			name: "multiple messages that have the same namespace",
+			nID:  []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			data: types.Data{
+				Txs: generateRandomContiguousShares(2),
+				Messages: types.Messages{
+					MessagesList: []types.Message{
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+							Data:        bytes.Repeat([]byte{1}, 300),
+						},
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+							Data:        bytes.Repeat([]byte{1}, 100),
+						},
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+							Data:        bytes.Repeat([]byte{1}, 42),
+						},
+					},
+				},
+			},
+			startIndex: 2,
+			endIndex:   6,
+		},
+		{
+			name: "find between message that crosses multiple shares",
+			nID:  []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			data: types.Data{
+				Txs: generateRandomContiguousShares(2),
+				Messages: types.Messages{
+					MessagesList: []types.Message{
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 7},
+							Data:        bytes.Repeat([]byte{1}, 300),
+						},
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+							Data:        bytes.Repeat([]byte{1}, 600),
+						},
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 9},
+							Data:        bytes.Repeat([]byte{1}, 42),
+						},
+					},
+				},
+			},
+			startIndex: 4,
+			endIndex:   7,
+		},
+		{
+			name:        "missing namespace not found",
+			expectedErr: ErrNotFoundInRange,
+			nID:         []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			data: types.Data{
+				Txs: generateRandomContiguousShares(2),
+				Messages: types.Messages{
+					MessagesList: []types.Message{
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 7},
+							Data:        bytes.Repeat([]byte{1}, 300),
+						},
+						{
+							NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 9},
+							Data:        bytes.Repeat([]byte{1}, 42),
+						},
+					},
+				},
+			},
+		},
 	}
 
-	shares, err := RetrieveShares(ctx, nID, dah, ipfsAPI)
-	if err != nil {
-		t.Fatal(err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+			tc := tc
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*4)
+			defer cancel()
+
+			block := types.Block{
+				LastCommit: &types.Commit{},
+				Data:       tc.data,
+			}
+
+			// fill the data availability header
+			block.Hash()
+
+			// save the block to the dag
+			err := PutBlock(ctx, api.Dag(), &block, ipfs.MockRouting(), log.TestingLogger())
+			require.NoError(t, err)
+
+			// retrieve desired shares
+			result, err := RetrieveShares(ctx, tc.nID, &block.DataAvailabilityHeader, api)
+			if tc.expectedErr != nil {
+				require.Equal(t, tc.expectedErr, err)
+				return
+			}
+			require.NoError(t, err)
+
+			// compare with original
+			shares, _ := tc.data.ComputeShares()
+			rawShares := shares.RawShares()
+			require.Equal(t, rawShares[tc.startIndex:tc.endIndex], result)
+		})
 	}
-	if len(shares) > 1 {
-		t.Fatal("unexpected share(s) returned: ", shares)
-	}
-	assert.Equal(t, nIDData, shares[0])
+
 }
 
 // todo fix later
@@ -223,7 +332,7 @@ func Test_multipleLeaves_findStartingIndex(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, share := range shares {
-		assert.Equal(t, leaves[i], share)
+		assert.Equal(t, leaves[i], share, i)
 	}
 }
 

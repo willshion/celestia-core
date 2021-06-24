@@ -11,6 +11,7 @@ import (
 	"github.com/ipfs/interface-go-ipfs-core/path"
 	"github.com/lazyledger/lazyledger-core/ipfs/plugin"
 	"github.com/lazyledger/lazyledger-core/types"
+	"github.com/lazyledger/lazyledger-core/types/consts"
 	"github.com/lazyledger/nmt"
 	"github.com/lazyledger/nmt/namespace"
 )
@@ -94,8 +95,8 @@ func getSharesByNamespace(
 			if err != nil {
 				return shares, err
 			}
-			if nID.Equal(leaf[:8]) {
-				shares = append(shares, leaf)
+			if nID.Equal(leaf[:consts.NamespaceSize]) {
+				shares = append(shares, leaf[consts.NamespaceSize:])
 				startingIndex++
 			} else {
 				break
