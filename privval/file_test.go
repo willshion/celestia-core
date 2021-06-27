@@ -58,7 +58,7 @@ func TestResetValidator(t *testing.T) {
 	height, round := int64(10), int32(1)
 	voteType := tmproto.PrevoteType
 	randBytes := tmrand.Bytes(tmhash.Size)
-	blockID := types.BlockID{Hash: randBytes, PartSetHeader: types.PartSetHeader{}}
+	blockID := types.BlockID{Hash: randBytes}
 	vote := newVote(privVal.Key.Address, 0, height, round, voteType, blockID)
 	err = privVal.SignVote("mychainid", vote.ToProto())
 	assert.NoError(t, err, "expected no error signing vote")
@@ -174,10 +174,8 @@ func TestSignVote(t *testing.T) {
 	randbytes := tmrand.Bytes(tmhash.Size)
 	randbytes2 := tmrand.Bytes(tmhash.Size)
 
-	block1 := types.BlockID{Hash: randbytes,
-		PartSetHeader: types.PartSetHeader{Total: 5, Hash: randbytes}}
-	block2 := types.BlockID{Hash: randbytes2,
-		PartSetHeader: types.PartSetHeader{Total: 10, Hash: randbytes2}}
+	block1 := types.BlockID{Hash: randbytes}
+	block2 := types.BlockID{Hash: randbytes2}
 
 	height, round := int64(10), int32(1)
 	voteType := tmproto.PrevoteType
@@ -228,10 +226,8 @@ func TestSignProposal(t *testing.T) {
 	randbytes := tmrand.Bytes(tmhash.Size)
 	randbytes2 := tmrand.Bytes(tmhash.Size)
 
-	block1 := types.BlockID{Hash: randbytes,
-		PartSetHeader: types.PartSetHeader{Total: 5, Hash: randbytes}}
-	block2 := types.BlockID{Hash: randbytes2,
-		PartSetHeader: types.PartSetHeader{Total: 10, Hash: randbytes2}}
+	block1 := types.BlockID{Hash: randbytes}
+	block2 := types.BlockID{Hash: randbytes2}
 	height, round := int64(10), int32(1)
 
 	// sign a proposal for first time
@@ -277,7 +273,7 @@ func TestDifferByTimestamp(t *testing.T) {
 	privVal, err := GenFilePV(tempKeyFile.Name(), tempStateFile.Name(), "")
 	require.NoError(t, err)
 	randbytes := tmrand.Bytes(tmhash.Size)
-	block1 := types.BlockID{Hash: randbytes, PartSetHeader: types.PartSetHeader{Total: 5, Hash: randbytes}}
+	block1 := types.BlockID{Hash: randbytes}
 	height, round := int64(10), int32(1)
 	chainID := "mychainid"
 
@@ -308,7 +304,7 @@ func TestDifferByTimestamp(t *testing.T) {
 	// test vote
 	{
 		voteType := tmproto.PrevoteType
-		blockID := types.BlockID{Hash: randbytes, PartSetHeader: types.PartSetHeader{}}
+		blockID := types.BlockID{Hash: randbytes}
 		vote := newVote(privVal.Key.Address, 0, height, round, voteType, blockID)
 		v := vote.ToProto()
 		err := privVal.SignVote("mychainid", v)

@@ -28,8 +28,7 @@ func TestMsgToProto(t *testing.T) {
 	}
 	pbPsh := psh.ToProto()
 	bi := types.BlockID{
-		Hash:          tmrand.Bytes(32),
-		PartSetHeader: psh,
+		Hash: tmrand.Bytes(32),
 	}
 	pbBi := bi.ToProto()
 	bits := bits.NewBitArray(1)
@@ -333,8 +332,7 @@ func TestConsMsgsVectors(t *testing.T) {
 	pbPsh := psh.ToProto()
 
 	bi := types.BlockID{
-		Hash:          []byte("add_more_exclamation_marks_code-"),
-		PartSetHeader: psh,
+		Hash: []byte("add_more_exclamation_marks_code-"),
 	}
 	pbBi := bi.ToProto()
 	bits := bits.NewBitArray(1)

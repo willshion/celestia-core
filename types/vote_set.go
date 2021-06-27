@@ -69,9 +69,14 @@ type VoteSet struct {
 	votesBitArray *bits.BitArray
 	votes         []*Vote                // Primary votes to share
 	sum           int64                  // Sum of voting power for seen votes, discounting conflicts
-	maj23         *BlockID               // First 2/3 majority seen
+	maj23         *maj23                 // First 2/3 majority seen
 	votesByBlock  map[string]*blockVotes // string(blockHash|blockParts) -> blockVotes
 	peerMaj23s    map[P2PID]BlockID      // Maj23 for each peer
+}
+
+type maj23 struct {
+	BlockID
+	PartSetHeader
 }
 
 // Constructs a new VoteSet struct used to accumulate votes for given height/round.
@@ -287,7 +292,7 @@ func (voteSet *VoteSet) addVerifiedVote(
 	if origSum < quorum && quorum <= votesByBlock.sum {
 		// Only consider the first quorum reached
 		if voteSet.maj23 == nil {
-			maj23BlockID := vote.BlockID
+			maj23BlockID := maj23{vote.BlockID, vote.PartSetHeader}
 			voteSet.maj23 = &maj23BlockID
 			// And also copy votes over to voteSet.votes
 			for i, vote := range votesByBlock.votes {
@@ -427,16 +432,16 @@ func (voteSet *VoteSet) HasAll() bool {
 
 // If there was a +2/3 majority for blockID, return blockID and true.
 // Else, return the empty BlockID{} and false.
-func (voteSet *VoteSet) TwoThirdsMajority() (blockID BlockID, ok bool) {
+func (voteSet *VoteSet) TwoThirdsMajority() (blockID maj23, ok bool) {
 	if voteSet == nil {
-		return BlockID{}, false
+		return maj23{}, false
 	}
 	voteSet.mtx.Lock()
 	defer voteSet.mtx.Unlock()
 	if voteSet.maj23 != nil {
 		return *voteSet.maj23, true
 	}
-	return BlockID{}, false
+	return maj23{}, false
 }
 
 //--------------------------------------------------------------------------------
@@ -592,13 +597,13 @@ func (voteSet *VoteSet) MakeCommit() *Commit {
 	for i, v := range voteSet.votes {
 		commitSig := v.CommitSig()
 		// if block ID exists but doesn't match, exclude sig
-		if commitSig.ForBlock() && !v.BlockID.Equals(*voteSet.maj23) {
+		if commitSig.ForBlock() && !v.BlockID.Equals(voteSet.maj23.BlockID) {
 			commitSig = NewCommitSigAbsent()
 		}
 		commitSigs[i] = commitSig
 	}
 
-	return NewCommit(voteSet.GetHeight(), voteSet.GetRound(), *voteSet.maj23, commitSigs)
+	return NewCommit(voteSet.GetHeight(), voteSet.GetRound(), voteSet.maj23.BlockID, commitSigs)
 }
 
 //--------------------------------------------------------------------------------

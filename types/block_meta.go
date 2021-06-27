@@ -15,16 +15,19 @@ type BlockMeta struct {
 	Header    Header                 `json:"header"`
 	NumTxs    int                    `json:"num_txs"`
 	DAHeader  DataAvailabilityHeader `json:"da_header"`
+	// TODO: should this even be stored in blockMeta at all??
+	PartSetHeader PartSetHeader `json:"part_set_header"`
 }
 
 // NewBlockMeta returns a new BlockMeta.
 func NewBlockMeta(block *Block, blockParts *PartSet) *BlockMeta {
 	return &BlockMeta{
-		BlockID:   BlockID{block.Hash(), blockParts.Header()},
-		BlockSize: block.Size(),
-		Header:    block.Header,
-		NumTxs:    len(block.Data.Txs),
-		DAHeader:  block.DataAvailabilityHeader,
+		BlockID:       BlockID{block.Hash()},
+		BlockSize:     block.Size(),
+		Header:        block.Header,
+		NumTxs:        len(block.Data.Txs),
+		DAHeader:      block.DataAvailabilityHeader,
+		PartSetHeader: blockParts.Header(),
 	}
 }
 

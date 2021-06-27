@@ -531,7 +531,7 @@ OUTER_LOOP:
 						"blockstoreBase", conR.conS.blockStore.Base(), "blockstoreHeight", conR.conS.blockStore.Height())
 					time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 				} else {
-					ps.InitProposalBlockParts(blockMeta.BlockID.PartSetHeader)
+					ps.InitProposalBlockParts(blockMeta.PartSetHeader)
 				}
 				// continue the loop since prs is a copy and not effected by this initialization
 				continue OUTER_LOOP
@@ -597,9 +597,9 @@ func (conR *Reactor) gossipDataForCatchup(logger log.Logger, rs *cstypes.RoundSt
 				"blockstoreBase", conR.conS.blockStore.Base(), "blockstoreHeight", conR.conS.blockStore.Height())
 			time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 			return
-		} else if !blockMeta.BlockID.PartSetHeader.Equals(prs.ProposalBlockPartSetHeader) {
+		} else if !blockMeta.PartSetHeader.Equals(prs.ProposalBlockPartSetHeader) {
 			logger.Info("Peer ProposalBlockPartSetHeader mismatch, sleeping",
-				"blockPartSetHeader", blockMeta.BlockID.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
+				"blockPartSetHeader", blockMeta.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
 			time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 			return
 		}
@@ -607,7 +607,7 @@ func (conR *Reactor) gossipDataForCatchup(logger log.Logger, rs *cstypes.RoundSt
 		part := conR.conS.blockStore.LoadBlockPart(prs.Height, index)
 		if part == nil {
 			logger.Error("Could not load part", "index", index,
-				"blockPartSetHeader", blockMeta.BlockID.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
+				"blockPartSetHeader", blockMeta.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
 			time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 			return
 		}
@@ -783,7 +783,7 @@ OUTER_LOOP:
 						Height:  prs.Height,
 						Round:   prs.Round,
 						Type:    tmproto.PrevoteType,
-						BlockID: maj23,
+						BlockID: maj23.BlockID,
 					}))
 					time.Sleep(conR.conS.config.PeerQueryMaj23SleepDuration)
 				}
@@ -800,7 +800,7 @@ OUTER_LOOP:
 						Height:  prs.Height,
 						Round:   prs.Round,
 						Type:    tmproto.PrecommitType,
-						BlockID: maj23,
+						BlockID: maj23.BlockID,
 					}))
 					time.Sleep(conR.conS.config.PeerQueryMaj23SleepDuration)
 				}
@@ -817,7 +817,7 @@ OUTER_LOOP:
 						Height:  prs.Height,
 						Round:   prs.ProposalPOLRound,
 						Type:    tmproto.PrevoteType,
-						BlockID: maj23,
+						BlockID: maj23.BlockID,
 					}))
 					time.Sleep(conR.conS.config.PeerQueryMaj23SleepDuration)
 				}
@@ -1017,8 +1017,8 @@ func (ps *PeerState) SetHasProposal(proposal *types.Proposal) {
 		return
 	}
 
-	ps.PRS.ProposalBlockPartSetHeader = proposal.BlockID.PartSetHeader
-	ps.PRS.ProposalBlockParts = bits.NewBitArray(int(proposal.BlockID.PartSetHeader.Total))
+	ps.PRS.ProposalBlockPartSetHeader = proposal.PartSetHeader
+	ps.PRS.ProposalBlockParts = bits.NewBitArray(int(proposal.PartSetHeader.Total))
 	ps.PRS.ProposalPOLRound = proposal.POLRound
 	ps.PRS.ProposalPOL = nil // Nil until ProposalPOLMessage received.
 }

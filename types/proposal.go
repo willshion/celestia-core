@@ -24,26 +24,31 @@ var (
 // If POLRound >= 0, then BlockID corresponds to the block that is locked in POLRound.
 type Proposal struct {
 	Type      tmproto.SignedMsgType
-	Height    int64                   `json:"height"`
-	Round     int32                   `json:"round"`     // there can not be greater than 2_147_483_647 rounds
-	POLRound  int32                   `json:"pol_round"` // -1 if null.
-	BlockID   BlockID                 `json:"block_id"`
-	Timestamp time.Time               `json:"timestamp"`
-	Signature []byte                  `json:"signature"`
-	DAHeader  *DataAvailabilityHeader `json:"da_header"`
+	Height    int64     `json:"height"`
+	Round     int32     `json:"round"`     // there can not be greater than 2_147_483_647 rounds
+	POLRound  int32     `json:"pol_round"` // -1 if null.
+	BlockID   BlockID   `json:"block_id"`
+	Timestamp time.Time `json:"timestamp"`
+	Signature []byte    `json:"signature"`
+	// TODO: why do we include the DAHeader in the Proposal?
+	// the proposer commits to the data via the data root,
+	// which is committed to in the BlockID/header hash
+	DAHeader      *DataAvailabilityHeader `json:"da_header"`
+	PartSetHeader PartSetHeader
 }
 
 // NewProposal returns a new Proposal.
 // If there is no POLRound, polRound should be -1.
-func NewProposal(height int64, round int32, polRound int32, blockID BlockID, daH *DataAvailabilityHeader) *Proposal {
+func NewProposal(height int64, round int32, polRound int32, blockID BlockID, daH *DataAvailabilityHeader, paH PartSetHeader) *Proposal {
 	return &Proposal{
-		Type:      tmproto.ProposalType,
-		Height:    height,
-		Round:     round,
-		BlockID:   blockID,
-		POLRound:  polRound,
-		Timestamp: tmtime.Now(),
-		DAHeader:  daH,
+		Type:          tmproto.ProposalType,
+		Height:        height,
+		Round:         round,
+		BlockID:       blockID,
+		POLRound:      polRound,
+		Timestamp:     tmtime.Now(),
+		DAHeader:      daH,
+		PartSetHeader: paH,
 	}
 }
 

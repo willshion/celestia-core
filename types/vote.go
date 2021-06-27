@@ -55,6 +55,7 @@ type Vote struct {
 	Timestamp        time.Time             `json:"timestamp"`
 	ValidatorAddress Address               `json:"validator_address"`
 	ValidatorIndex   int32                 `json:"validator_index"`
+	PartSetHeader    PartSetHeader         `json:"part_set_header"`
 	Signature        []byte                `json:"signature"`
 }
 
