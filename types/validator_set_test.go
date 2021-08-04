@@ -683,7 +683,7 @@ func TestValidatorSet_VerifyCommit_All(t *testing.T) {
 	require.NoError(t, err)
 	vote.Signature = sig
 
-	commit := NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{vote.CommitSig()}, vote.PartSetHeader)
+	commit := NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{vote.CommitSig()})
 
 	vote2 := *vote
 	sig2, err := privKey.Sign(VoteSignBytes("EpsilonEridani", v))
@@ -706,19 +706,18 @@ func TestValidatorSet_VerifyCommit_All(t *testing.T) {
 		{"wrong height", chainID, vote.BlockID, vote.PartSetHeader, vote.Height - 1, commit, true},
 
 		{"wrong set size: 1 vs 0", chainID, vote.BlockID, vote.PartSetHeader, vote.Height,
-			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{}, vote.PartSetHeader), true},
+			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{}), true},
 
 		{"wrong set size: 1 vs 2", chainID, vote.BlockID, vote.PartSetHeader, vote.Height,
 			NewCommit(vote.Height, vote.Round, vote.BlockID,
-				[]CommitSig{vote.CommitSig(), {BlockIDFlag: BlockIDFlagAbsent}}, vote.PartSetHeader), true},
+				[]CommitSig{vote.CommitSig(), {BlockIDFlag: BlockIDFlagAbsent}}), true},
 
 		{"insufficient voting power: got 0, needed more than 666", chainID, vote.BlockID, vote.PartSetHeader, vote.Height,
-			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{{BlockIDFlag: BlockIDFlagAbsent}},
-				vote.PartSetHeader), true,
+			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{{BlockIDFlag: BlockIDFlagAbsent}}), true,
 		},
 
 		{"wrong signature (#0)", chainID, vote.BlockID, vote.PartSetHeader, vote.Height,
-			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{vote2.CommitSig()}, vote.PartSetHeader), true},
+			NewCommit(vote.Height, vote.Round, vote.BlockID, []CommitSig{vote2.CommitSig()}), true},
 	}
 
 	for _, tc := range testCases {
@@ -733,7 +732,7 @@ func TestValidatorSet_VerifyCommit_All(t *testing.T) {
 				assert.NoError(t, err, "VerifyCommit")
 			}
 
-			err = vset.VerifyCommitLight(tc.chainID, tc.blockID, tc.partSetHeader, tc.height, tc.commit)
+			err = vset.VerifyCommitLight(tc.chainID, tc.blockID, tc.height, tc.commit)
 			if tc.expErr {
 				if assert.Error(t, err, "VerifyCommitLight") {
 					assert.Contains(t, err.Error(), tc.description, "VerifyCommitLight")
@@ -791,7 +790,7 @@ func TestValidatorSet_VerifyCommitLight_ReturnsAsSoonAsMajorityOfVotingPowerSign
 	vote.Signature = v.Signature
 	commit.Signatures[3] = vote.CommitSig()
 
-	err = valSet.VerifyCommitLight(chainID, blockID, psh, h, commit)
+	err = valSet.VerifyCommitLight(chainID, blockID, h, commit)
 	assert.NoError(t, err)
 }
 

@@ -98,9 +98,6 @@ func TestBlockValidateBasic(t *testing.T) {
 		{"Missing LastCommit", func(blk *Block) {
 			blk.LastCommit = nil
 		}, true},
-		{"Invalid LastCommit", func(blk *Block) {
-			blk.LastCommit = NewCommit(-1, 0, *voteSet.maj23, nil, *voteSet.maj23PartSetHeader)
-		}, true},
 		{"Invalid Evidence", func(blk *Block) {
 			emptyEv := &DuplicateVoteEvidence{}
 			blk.Evidence = EvidenceData{Evidence: []Evidence{emptyEv}}
@@ -320,10 +317,6 @@ func TestMaxCommitBytes(t *testing.T) {
 		Round:  math.MaxInt32,
 		BlockID: BlockID{
 			Hash: tmhash.Sum([]byte("blockID_hash")),
-		},
-		PartSetHeader: PartSetHeader{
-			Total: math.MaxInt32,
-			Hash:  tmhash.Sum([]byte("blockID_part_set_header_hash")),
 		},
 		Signatures: []CommitSig{cs},
 	}
@@ -1234,9 +1227,6 @@ func TestCommit_ValidateBasic(t *testing.T) {
 				BlockID: BlockID{
 					Hash: make([]byte, tmhash.Size),
 				},
-				PartSetHeader: PartSetHeader{
-					Hash: make([]byte, tmhash.Size),
-				},
 				HeaderHash: make([]byte, tmhash.Size),
 			},
 			true, "no signatures in commit",
@@ -1247,9 +1237,6 @@ func TestCommit_ValidateBasic(t *testing.T) {
 				Height: 1,
 				Round:  1,
 				BlockID: BlockID{
-					Hash: make([]byte, tmhash.Size),
-				},
-				PartSetHeader: PartSetHeader{
 					Hash: make([]byte, tmhash.Size),
 				},
 				Signatures: []CommitSig{
@@ -1269,9 +1256,6 @@ func TestCommit_ValidateBasic(t *testing.T) {
 				Height: 1,
 				Round:  1,
 				BlockID: BlockID{
-					Hash: make([]byte, tmhash.Size),
-				},
-				PartSetHeader: PartSetHeader{
 					Hash: make([]byte, tmhash.Size),
 				},
 				Signatures: []CommitSig{

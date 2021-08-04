@@ -777,7 +777,7 @@ const (
 
 const (
 	// Max size of commit without any commitSigs -> 82 for BlockID, 8 for Height, 4 for Round.
-	MaxCommitOverheadBytes int64 = 94
+	MaxCommitOverheadBytes int64 = 52
 	// Commit sig size is made up of 64 bytes for the signature, 20 bytes for the address,
 	// 1 byte for the flag and 14 bytes for the timestamp
 	MaxCommitSigBytes int64 = 109
@@ -946,12 +946,11 @@ type Commit struct {
 	// ValidatorSet order.
 	// Any peer with a block can gossip signatures by index with a peer without
 	// recalculating the active ValidatorSet.
-	Height        int64         `json:"height"`
-	Round         int32         `json:"round"`
-	BlockID       BlockID       `json:"block_id"`
-	Signatures    []CommitSig   `json:"signatures"`
-	HeaderHash    []byte        `json:"header_hash"`
-	PartSetHeader PartSetHeader `json:"part_set_header"`
+	Height     int64       `json:"height"`
+	Round      int32       `json:"round"`
+	BlockID    BlockID     `json:"block_id"`
+	Signatures []CommitSig `json:"signatures"`
+	HeaderHash []byte      `json:"header_hash"`
 
 	// Memoized in first call to corresponding method.
 	// NOTE: can't memoize in constructor because constructor isn't used for
@@ -961,14 +960,13 @@ type Commit struct {
 }
 
 // NewCommit returns a new Commit.
-func NewCommit(height int64, round int32, blockID BlockID, commitSigs []CommitSig, psh PartSetHeader) *Commit {
+func NewCommit(height int64, round int32, blockID BlockID, commitSigs []CommitSig) *Commit {
 	return &Commit{
-		Height:        height,
-		Round:         round,
-		BlockID:       blockID,
-		Signatures:    commitSigs,
-		HeaderHash:    blockID.Hash,
-		PartSetHeader: psh,
+		Height:     height,
+		Round:      round,
+		BlockID:    blockID,
+		Signatures: commitSigs,
+		HeaderHash: blockID.Hash,
 	}
 }
 
@@ -999,7 +997,6 @@ func (commit *Commit) GetVote(valIdx int32) *Vote {
 		Height:           commit.Height,
 		Round:            commit.Round,
 		BlockID:          commitSig.BlockID(commit.BlockID),
-		PartSetHeader:    commitSig.PartSetHeader(commit.PartSetHeader),
 		Timestamp:        commitSig.Timestamp,
 		ValidatorAddress: commitSig.ValidatorAddress,
 		ValidatorIndex:   valIdx,
@@ -1139,14 +1136,12 @@ func (commit *Commit) StringIndented(indent string) string {
 %s  Height:     %d
 %s  Round:      %d
 %s  BlockID:    %v
-%s  PartSetHeader: %v
 %s  Signatures:
 %s    %v
 %s}#%v`,
 		indent, commit.Height,
 		indent, commit.Round,
 		indent, commit.BlockID,
-		indent, commit.PartSetHeader,
 		indent,
 		indent, strings.Join(commitSigStrings, "\n"+indent+"    "),
 		indent, commit.hash)
@@ -1165,13 +1160,10 @@ func (commit *Commit) ToProto() *tmproto.Commit {
 	}
 	c.Signatures = sigs
 
-	ppsh := commit.PartSetHeader.ToProto()
-
 	c.Height = commit.Height
 	c.Round = commit.Round
 	c.BlockID = commit.BlockID.ToProto()
 	c.HeaderHash = commit.HeaderHash
-	c.PartSetHeader = &ppsh
 
 	return c
 }
@@ -1192,11 +1184,6 @@ func CommitFromProto(cp *tmproto.Commit) (*Commit, error) {
 		return nil, err
 	}
 
-	psh, err := PartSetHeaderFromProto(cp.PartSetHeader)
-	if err != nil {
-		return nil, err
-	}
-
 	sigs := make([]CommitSig, len(cp.Signatures))
 	for i := range cp.Signatures {
 		if err := sigs[i].FromProto(cp.Signatures[i]); err != nil {
@@ -1209,7 +1196,6 @@ func CommitFromProto(cp *tmproto.Commit) (*Commit, error) {
 	commit.Round = cp.Round
 	commit.BlockID = *bi
 	commit.HeaderHash = cp.HeaderHash
-	commit.PartSetHeader = *psh
 
 	return commit, commit.ValidateBasic()
 }

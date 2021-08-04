@@ -716,8 +716,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID, height i
 //
 // This method is primarily used by the light client and does not check all the
 // signatures.
-func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
-	partSetHeader PartSetHeader, height int64, commit *Commit) error {
+func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID, height int64, commit *Commit) error {
 	if commit == nil {
 		return errors.New("nil commit")
 	}

@@ -71,7 +71,6 @@ func TestBeginBlockValidators(t *testing.T) {
 	stateStore := sm.NewStore(stateDB)
 
 	prevHash := state.LastBlockID.Hash
-	prevParts := types.PartSetHeader{}
 	prevBlockID := types.BlockID{Hash: prevHash}
 
 	var (
@@ -98,7 +97,7 @@ func TestBeginBlockValidators(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		lastCommit := types.NewCommit(1, 0, prevBlockID, tc.lastCommitSigs, prevParts)
+		lastCommit := types.NewCommit(1, 0, prevBlockID, tc.lastCommitSigs)
 
 		// block for height 2
 		block, _ := state.MakeBlock(2, makeTxs(2), nil, nil,
@@ -158,7 +157,6 @@ func TestBeginBlockByzantineValidators(t *testing.T) {
 	dve := types.NewMockDuplicateVoteEvidenceWithValidator(3, defaultEvidenceTime, privVal, state.ChainID)
 	dve.ValidatorPower = 1000
 	bID := makeBlockID(header.Hash())
-	psH := makePartSetHeader(100, []byte("partshash"))
 	lcae := &types.LightClientAttackEvidence{
 		ConflictingBlock: &types.LightBlock{
 			SignedHeader: &types.SignedHeader{
@@ -168,7 +166,7 @@ func TestBeginBlockByzantineValidators(t *testing.T) {
 					ValidatorAddress: crypto.AddressHash([]byte("validator_address")),
 					Timestamp:        defaultEvidenceTime,
 					Signature:        crypto.CRandBytes(types.MaxSignatureSize),
-				}}, psH),
+				}}),
 			},
 			ValidatorSet: state.Validators,
 		},

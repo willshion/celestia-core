@@ -396,7 +396,7 @@ FOR_LOOP:
 			// NOTE: we can probably make this more efficient, but note that calling
 			// first.Hash() doesn't verify the tx contents, so MakePartSet() is
 			// currently necessary.
-			err := state.Validators.VerifyCommitLight(chainID, firstID, firstPartSetHeader, first.Height, second.LastCommit)
+			err := state.Validators.VerifyCommitLight(chainID, firstID, first.Height, second.LastCommit)
 			if err != nil {
 				err = fmt.Errorf("invalid last commit: %w", err)
 				bcR.Logger.Error(err.Error(),
