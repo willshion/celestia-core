@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "tendermint/crypto/proof.proto";
 import "tendermint/version/types.proto";
 import "tendermint/types/validator.proto";
+import "tendermint/types/celestia_block_data.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
@@ -81,12 +82,45 @@ message Header {
   bytes proposer_address = 14;  // original proposer of the block
 }
 
-// Data contains the set of transactions included in the block
+// Data contains the set of transactions, intermediate state roots, evidence, 
+// and messages included in the block
 message Data {
   // Txs that will be applied by state @ block.Height+1.
   // NOTE: not all txs here are valid.  We're just agreeing on the order first.
   // This means that block.AppHash does not include these txs.
-  repeated bytes txs = 1;
+  repeated bytes         txs                      = 1;
+  tendermint.types.IntermediateStateRoots intermediate_state_roots = 2 [(gogoproto.nullable) = false];
+  tendermint.types.EvidenceList           evidence                 = 3 [(gogoproto.nullable) = false];
+  tendermint.types.Messages               messages                 = 4 [(gogoproto.nullable) = false];
+}
+
+message Evidence {
+  oneof sum {
+    DuplicateVoteEvidence     duplicate_vote_evidence      = 1;
+    LightClientAttackEvidence light_client_attack_evidence = 2;
+  }
+}
+
+// DuplicateVoteEvidence contains evidence of a validator signed two conflicting votes.
+message DuplicateVoteEvidence {
+  tendermint.types.Vote     vote_a             = 1;
+  tendermint.types.Vote     vote_b             = 2;
+  int64                     total_voting_power = 3;
+  int64                     validator_power    = 4;
+  google.protobuf.Timestamp timestamp          = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// LightClientAttackEvidence contains evidence of a set of validators attempting to mislead a light client.
+message LightClientAttackEvidence {
+  tendermint.types.LightBlock conflicting_block            = 1;
+  int64                       common_height                = 2;
+  repeated tendermint.types.Validator byzantine_validators = 3;
+  int64                               total_voting_power   = 4;
+  google.protobuf.Timestamp           timestamp            = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message EvidenceList {
+  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
 }
 
 // Vote represents a prevote, precommit, or commit vote from validators for
@@ -155,3 +189,4 @@ message TxProof {
   bytes                   data      = 2;
   tendermint.crypto.Proof proof     = 3;
 }
+

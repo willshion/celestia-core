@@ -1005,6 +1005,17 @@ type Data struct {
 	// This means that block.AppHash does not include these txs.
 	Txs Txs `json:"txs"`
 
+	// Intermediate state roots of the Txs included in block.Height
+	// and executed by state state @ block.Height+1.
+	IntermediateStateRoots IntermediateStateRoots `json:"intermediate_roots"`
+
+	// Evidence is the evidence included in the block.Height
+	// and executed by state
+	Evidence EvidenceData `json:"evidence"`
+
+	// The messages included in this block.
+	Messages Messages `json:"msgs"`
+
 	// Volatile
 	hash tmbytes.HexBytes
 }
@@ -1052,6 +1063,15 @@ func (data *Data) ToProto() tmproto.Data {
 		tp.Txs = txBzs
 	}
 
+	tp.IntermediateStateRoots = data.IntermediateStateRoots.ToProto()
+	tp.Messages = data.Messages.ToProto()
+	pevd, err := data.Evidence.ToProto()
+	if err != nil {
+		return tmproto.Data{}
+	}
+
+	tp.Evidence = *pevd
+
 	return *tp
 }
 
@@ -1072,6 +1092,12 @@ func DataFromProto(dp *tmproto.Data) (Data, error) {
 	} else {
 		data.Txs = Txs{}
 	}
+
+	data.IntermediateStateRoots = IntermediateStateRootsFromProto(dp.IntermediateStateRoots)
+	if err := data.Evidence.FromProto(&dp.Evidence); err != nil {
+		return *data, err
+	}
+	data.Messages = MessagesFromProto(&dp.Messages)
 
 	return *data, nil
 }
