@@ -44,8 +44,7 @@ type Block struct {
 
 	Header     `json:"header"`
 	Data       `json:"data"`
-	Evidence   EvidenceData `json:"evidence"`
-	LastCommit *Commit      `json:"last_commit"`
+	LastCommit *Commit `json:"last_commit"`
 }
 
 // ValidateBasic performs basic validation that doesn't involve state data.
@@ -314,9 +313,9 @@ func MakeBlock(height int64, txs []Tx, lastCommit *Commit, evidence []Evidence) 
 			Height:  height,
 		},
 		Data: Data{
-			Txs: txs,
+			Txs:      txs,
+			Evidence: EvidenceData{Evidence: evidence},
 		},
-		Evidence:   EvidenceData{Evidence: evidence},
 		LastCommit: lastCommit,
 	}
 	block.fillHeader()

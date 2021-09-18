@@ -3,6 +3,8 @@ package types
 import (
 	// it is ok to use math/rand here: we do not need a cryptographically secure random
 	// number generator here and we can run the tests a bit faster
+
+	stdbytes "bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -145,7 +147,7 @@ func TestBlockMakePartSetWithEvidence(t *testing.T) {
 
 	partSet := MakeBlock(h, []Tx{Tx("Hello World")}, commit, evList).MakePartSet(512)
 	assert.NotNil(t, partSet)
-	assert.EqualValues(t, 4, partSet.Total())
+	assert.EqualValues(t, 5, partSet.Total())
 }
 
 func TestBlockHashesTo(t *testing.T) {
@@ -644,19 +646,32 @@ func TestBlockIDValidateBasic(t *testing.T) {
 }
 
 func TestBlockProtoBuf(t *testing.T) {
+	emptyEvidenceHash := bytes.HexBytes{
+		0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+		0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
+	}
 	h := mrand.Int63()
 	c1 := randCommit(time.Now())
 	b1 := MakeBlock(h, []Tx{Tx([]byte{1})}, &Commit{Signatures: []CommitSig{}}, []Evidence{})
+	b1.Data.IntermediateStateRoots = IntermediateStateRoots{RawRootsList: []bytes.HexBytes{}}
+	b1.Data.Evidence = EvidenceData{Evidence: []Evidence{}, hash: emptyEvidenceHash}
+	b1.Data.Messages = Messages{MessagesList: []Message{}}
 	b1.ProposerAddress = tmrand.Bytes(crypto.AddressSize)
 
 	b2 := MakeBlock(h, []Tx{Tx([]byte{1})}, c1, []Evidence{})
+	b2.Data.IntermediateStateRoots = IntermediateStateRoots{RawRootsList: []bytes.HexBytes{}}
+	b2.Data.Messages = Messages{MessagesList: []Message{}}
 	b2.ProposerAddress = tmrand.Bytes(crypto.AddressSize)
 	evidenceTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)
 	evi := NewMockDuplicateVoteEvidence(h, evidenceTime, "block-test-chain")
-	b2.Evidence = EvidenceData{Evidence: EvidenceList{evi}}
+	b2.Evidence = EvidenceData{Evidence: EvidenceList{evi}, byteSize: 388}
 	b2.EvidenceHash = b2.Evidence.Hash()
 
 	b3 := MakeBlock(h, []Tx{}, c1, []Evidence{})
+	b3.Data.Evidence = EvidenceData{Evidence: []Evidence{}, hash: emptyEvidenceHash}
+	b3.Data.IntermediateStateRoots = IntermediateStateRoots{RawRootsList: []bytes.HexBytes{}}
+	b3.Data.Messages = Messages{MessagesList: []Message{}}
+	b3.ProposerAddress = tmrand.Bytes(crypto.AddressSize)
 	b3.ProposerAddress = tmrand.Bytes(crypto.AddressSize)
 	testCases := []struct {
 		msg      string
@@ -691,8 +706,18 @@ func TestBlockProtoBuf(t *testing.T) {
 }
 
 func TestDataProtoBuf(t *testing.T) {
-	data := &Data{Txs: Txs{Tx([]byte{1}), Tx([]byte{2}), Tx([]byte{3})}}
-	data2 := &Data{Txs: Txs{}}
+	data := &Data{
+		Txs:                    Txs{Tx([]byte{1}), Tx([]byte{2}), Tx([]byte{3})},
+		IntermediateStateRoots: IntermediateStateRoots{RawRootsList: []bytes.HexBytes{stdbytes.Repeat([]byte{1}, 32)}},
+		Messages:               Messages{MessagesList: []Message{{NamespaceID: []byte{1, 2, 3, 4, 5, 6, 7, 8}, Data: []byte{1}}}},
+		Evidence:               EvidenceData{Evidence: EvidenceList{}},
+	}
+	data2 := &Data{
+		Txs:                    Txs{},
+		IntermediateStateRoots: IntermediateStateRoots{RawRootsList: []bytes.HexBytes{}},
+		Messages:               Messages{MessagesList: []Message{}},
+		Evidence:               EvidenceData{Evidence: EvidenceList{}},
+	}
 	testCases := []struct {
 		msg     string
 		data1   *Data
