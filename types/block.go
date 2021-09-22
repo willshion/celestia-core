@@ -122,10 +122,12 @@ func (b *Block) fillDataAvailabilityHeader() {
 
 	// create the nmt wrapper to generate row and col commitments
 	squareSize := uint64(math.Sqrt(float64(len(shares))))
-	dah, err := da.NewDataAvailabilityHeader(squareSize, shares)
+	eds, err := da.ExtendShares(squareSize, shares)
 	if err != nil {
 		panic(fmt.Sprintf("unexpected error: %v", err))
 	}
+
+	dah := da.NewDataAvailabilityHeader(eds)
 
 	b.DataAvailabilityHeader = dah
 
