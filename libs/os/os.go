@@ -48,3 +48,8 @@ func CopyFile(src, dst string) error {
 	_, err = io.Copy(dstfile, srcfile)
 	return err
 }
+
+func Exit(s string) {
+	fmt.Printf(s + "\n")
+	os.Exit(1)
+}

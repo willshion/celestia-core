@@ -2,14 +2,12 @@ package types
 
 import (
 	"context"
-	fmt "fmt"
 )
 
 // Application is an interface that enables any finite, deterministic state machine
 // to be driven by a blockchain-based replication engine via the ABCI.
 // All methods take a RequestXxx argument and return a ResponseXxx argument,
 // except CheckTx/DeliverTx, which take `tx []byte`, and `Commit`, which takes nothing.
-// nolint:lll // ignore for interface
 type Application interface {
 	// Info/Query Connection
 	Info(RequestInfo) ResponseInfo    // Return application info
@@ -21,6 +19,7 @@ type Application interface {
 	// Consensus Connection
 	InitChain(RequestInitChain) ResponseInitChain // Initialize blockchain w validators/other info from TendermintCore
 	PrepareProposal(RequestPrepareProposal) ResponsePrepareProposal
+	ProcessProposal(RequestProcessProposal) ResponseProcessProposal
 	// Signals the beginning of a block
 	BeginBlock(RequestBeginBlock) ResponseBeginBlock
 	// Deliver a tx for full processing
@@ -74,7 +73,9 @@ func (BaseApplication) ExtendVote(req RequestExtendVote) ResponseExtendVote {
 }
 
 func (BaseApplication) VerifyVoteExtension(req RequestVerifyVoteExtension) ResponseVerifyVoteExtension {
-	return ResponseVerifyVoteExtension{}
+	return ResponseVerifyVoteExtension{
+		Result: ResponseVerifyVoteExtension_ACCEPT,
+	}
 }
 
 func (BaseApplication) Query(req RequestQuery) ResponseQuery {
@@ -111,6 +112,10 @@ func (BaseApplication) ApplySnapshotChunk(req RequestApplySnapshotChunk) Respons
 
 func (BaseApplication) PrepareProposal(req RequestPrepareProposal) ResponsePrepareProposal {
 	return ResponsePrepareProposal{}
+}
+
+func (BaseApplication) ProcessProposal(req RequestProcessProposal) ResponseProcessProposal {
+	return ResponseProcessProposal{}
 }
 
 //-------------------------------------------------------
@@ -216,7 +221,6 @@ func (app *GRPCApplication) PrepareProposal(
 
 func (app *GRPCApplication) ProcessProposal(
 	ctx context.Context, req *RequestProcessProposal) (*ResponseProcessProposal, error) {
-	fmt.Println("ProcessProposal not implemented yet.")
-	// res := app.app.ProcessProposal(*req)
-	return nil, nil
+	res := app.app.ProcessProposal(*req)
+	return &res, nil
 }
