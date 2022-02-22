@@ -131,6 +131,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 		abci.RequestPrepareProposal{
 			BlockData:     &tmproto.Data{Txs: txs.ToSliceOfBytes(), Evidence: *pevdData},
 			BlockDataSize: maxDataBytes},
+		nil,
 	)
 	if err != nil {
 		// The App MUST ensure that only valid (and hence 'processable') transactions

@@ -58,7 +58,7 @@ type Client interface {
 	OfferSnapshotSync(types.RequestOfferSnapshot) (*types.ResponseOfferSnapshot, error)
 	LoadSnapshotChunkSync(types.RequestLoadSnapshotChunk) (*types.ResponseLoadSnapshotChunk, error)
 	ApplySnapshotChunkSync(types.RequestApplySnapshotChunk) (*types.ResponseApplySnapshotChunk, error)
-	PrepareProposalSync(types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error)
+	PrepareProposalSync(types.RequestPrepareProposal, types.Reaper) (*types.ResponsePrepareProposal, error)
 	ProcessProposalSync(types.RequestProcessProposal) (*types.ResponseProcessProposal, error)
 }
 

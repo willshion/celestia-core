@@ -171,7 +171,7 @@ func (app *PersistentKVStoreApplication) ApplySnapshotChunk(
 }
 
 func (app *PersistentKVStoreApplication) PrepareProposal(
-	req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+	req types.RequestPrepareProposal, _ types.Reaper) types.ResponsePrepareProposal {
 	return types.ResponsePrepareProposal{BlockData: req.BlockData}
 }
 

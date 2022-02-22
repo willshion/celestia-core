@@ -231,7 +231,7 @@ func (s *SocketServer) handleRequest(req *types.Request, responses chan<- *types
 		res := s.app.OfferSnapshot(*r.OfferSnapshot)
 		responses <- types.ToResponseOfferSnapshot(res)
 	case *types.Request_PrepareProposal:
-		res := s.app.PrepareProposal(*r.PrepareProposal)
+		res := s.app.PrepareProposal(*r.PrepareProposal, nil)
 		responses <- types.ToResponsePrepareProposal(res)
 	case *types.Request_LoadSnapshotChunk:
 		res := s.app.LoadSnapshotChunk(*r.LoadSnapshotChunk)

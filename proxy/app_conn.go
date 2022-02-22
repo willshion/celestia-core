@@ -21,7 +21,7 @@ type AppConnConsensus interface {
 	EndBlockSync(types.RequestEndBlock) (*types.ResponseEndBlock, error)
 	CommitSync() (*types.ResponseCommit, error)
 
-	PrepareProposalSync(types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error)
+	PrepareProposalSync(types.RequestPrepareProposal, types.Reaper) (*types.ResponsePrepareProposal, error)
 	ProcessProposalSync(types.RequestProcessProposal) (*types.ResponseProcessProposal, error)
 }
 
@@ -98,8 +98,9 @@ func (app *appConnConsensus) CommitSync() (*types.ResponseCommit, error) {
 
 func (app *appConnConsensus) PrepareProposalSync(
 	req types.RequestPrepareProposal,
+	r types.Reaper,
 ) (*types.ResponsePrepareProposal, error) {
-	return app.appConn.PrepareProposalSync(req)
+	return app.appConn.PrepareProposalSync(req, r)
 }
 
 func (app *appConnConsensus) ProcessProposalSync(

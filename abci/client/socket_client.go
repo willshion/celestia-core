@@ -429,6 +429,7 @@ func (cli *socketClient) ApplySnapshotChunkSync(
 
 func (cli *socketClient) PrepareProposalSync(
 	req types.RequestPrepareProposal,
+	_ types.Reaper,
 ) (*types.ResponsePrepareProposal, error) {
 
 	reqres := cli.queueRequest(types.ToRequestPrepareProposal(req))

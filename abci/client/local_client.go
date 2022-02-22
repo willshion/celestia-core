@@ -213,7 +213,7 @@ func (app *localClient) PrepareProposalAsync(
 	app.mtx.Lock()
 	defer app.mtx.Unlock()
 
-	res := app.Application.PrepareProposal(req)
+	res := app.Application.PrepareProposal(req, nil)
 	return app.callback(
 		types.ToRequestPrepareProposal(req),
 		types.ToResponsePrepareProposal(res),
@@ -351,12 +351,13 @@ func (app *localClient) ApplySnapshotChunkSync(
 
 func (app *localClient) PrepareProposalSync(
 	req types.RequestPrepareProposal,
+	r types.Reaper,
 ) (*types.ResponsePrepareProposal, error) {
 
 	app.mtx.Lock()
 	defer app.mtx.Unlock()
 
-	res := app.Application.PrepareProposal(req)
+	res := app.Application.PrepareProposal(req, r)
 	return &res, nil
 }
 

@@ -258,6 +258,6 @@ func (app *CounterApplication) Commit() abci.ResponseCommit {
 }
 
 func (app *CounterApplication) PrepareProposal(
-	req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	req abci.RequestPrepareProposal, _ abci.Reaper) abci.ResponsePrepareProposal {
 	return abci.ResponsePrepareProposal{BlockData: req.BlockData}
 }

@@ -255,7 +255,7 @@ func (app *Application) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) a
 }
 
 func (app *Application) PrepareProposal(
-	req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	req abci.RequestPrepareProposal, _ abci.Reaper) abci.ResponsePrepareProposal {
 	return abci.ResponsePrepareProposal{BlockData: req.BlockData}
 }
 

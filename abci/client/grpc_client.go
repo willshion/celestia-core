@@ -460,6 +460,7 @@ func (cli *grpcClient) ApplySnapshotChunkSync(
 
 func (cli *grpcClient) PrepareProposalSync(
 	params types.RequestPrepareProposal,
+	_ types.Reaper,
 ) (*types.ResponsePrepareProposal, error) {
 
 	reqres := cli.PrepareProposalAsync(params)

@@ -575,13 +575,13 @@ func (_m *Client) OnStop() {
 	_m.Called()
 }
 
-// PrepareProposalSync provides a mock function with given fields: _a0
-func (_m *Client) PrepareProposalSync(_a0 types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error) {
-	ret := _m.Called(_a0)
+// PrepareProposalSync provides a mock function with given fields: _a0, _a1
+func (_m *Client) PrepareProposalSync(_a0 types.RequestPrepareProposal, _a1 types.Reaper) (*types.ResponsePrepareProposal, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *types.ResponsePrepareProposal
-	if rf, ok := ret.Get(0).(func(types.RequestPrepareProposal) *types.ResponsePrepareProposal); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(types.RequestPrepareProposal, types.Reaper) *types.ResponsePrepareProposal); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.ResponsePrepareProposal)
@@ -589,8 +589,8 @@ func (_m *Client) PrepareProposalSync(_a0 types.RequestPrepareProposal) (*types.
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(types.RequestPrepareProposal) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(types.RequestPrepareProposal, types.Reaper) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
