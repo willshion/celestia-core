@@ -25,7 +25,6 @@ linters:
     - lll
     - misspell
     # - maligned
-    - misspell
     - nakedret
     - prealloc
     # - scopelint
