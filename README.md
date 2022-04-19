@@ -2,9 +2,9 @@
 
 ![banner](docs/tendermint-core-image.jpg)
 
-[Byzantine-Fault Tolerant](https://en.wikipedia.org/wiki/Byzantine_fault_tolerance)
-[State Machines](https://en.wikipedia.org/wiki/State_machine_replication).
-Or [Blockchain](<https://en.wikipedia.org/wiki/Blockchain_(database)>), for short.
+[拜占庭容错](https://en.wikipedia.org/wiki/Byzantine_fault_tolerance)
+[状态机](https://en.wikipedia.org/wiki/State_machine_replication).
+或者 [区块链](<https://en.wikipedia.org/wiki/Blockchain_(database)>), 简单点.
 [中文版 点我](<https://en.wikipedia.org/wiki/Blockchain_(database)>).
 
 [![version](https://img.shields.io/github/tag/tendermint/tendermint.svg)](https://github.com/tendermint/tendermint/releases/latest)
@@ -19,80 +19,78 @@ Or [Blockchain](<https://en.wikipedia.org/wiki/Blockchain_(database)>), for shor
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | master | [![CircleCI](https://circleci.com/gh/tendermint/tendermint/tree/master.svg?style=shield)](https://circleci.com/gh/tendermint/tendermint/tree/master) </br> ![Tests](https://github.com/tendermint/tendermint/workflows/Tests/badge.svg?branch=master) | [![codecov](https://codecov.io/gh/tendermint/tendermint/branch/master/graph/badge.svg)](https://codecov.io/gh/tendermint/tendermint) | ![Lint](https://github.com/tendermint/tendermint/workflows/Lint/badge.svg) |
 
-Tendermint Core is Byzantine Fault Tolerant (BFT) middleware that takes a state transition machine - written in any programming language -
-and securely replicates it on many machines.
+Tendermint Core 是 采用状态转换机的拜占庭容错 (BFT) 中间件 - 可以用任何编程语言编写 （现在是golang）-
+还有 可以在多台机器上安全地复制.
 
-For protocol details, see [the specification](https://github.com/tendermint/spec).
+查看更多协议细节, 点  [这里](https://github.com/tendermint/spec).
 
-For detailed analysis of the consensus protocol, including safety and liveness proofs,
-see our recent paper, "[The latest gossip on BFT consensus](https://arxiv.org/abs/1807.04938)".
+有关共识协议的详细分析，包括安全性和活性证明，
+看我们最近的论文, "[The latest gossip on BFT consensus](https://arxiv.org/abs/1807.04938)".
 
 ## Releases
 
-Please do not depend on master as your production branch. Use [releases](https://github.com/tendermint/tendermint/releases) instead.
+请不要使用 master 作为您的生产 。用这里 [releases](https://github.com/tendermint/tendermint/releases) instead.
 
-Tendermint is being used in production in both private and public environments,
-most notably the blockchains of the [Cosmos Network](https://cosmos.network/).
-However, we are still making breaking changes to the protocol and the APIs and have not yet released v1.0.
-See below for more details about [versioning](#versioning).
+Tendermint 正在私人和公共环境中用于生产,
+最值得注意的是 [Cosmos Network](https://cosmos.network/).
+但是，我们仍在对协议和 API 进行重大更改，尚未发布 v1.0.
+有关更多详细信息，请参见下文 [versioning](#versioning).
 
-In any case, if you intend to run Tendermint in production, we're happy to help. You can
-contact us [over email](mailto:hello@interchain.berlin) or [join the chat](https://discord.gg/AzefAFd).
+无论如何，如果您打算在生产环境中运行 Tendermint，我们很乐意为您提供帮助。 你可以
+邮件我们 [over email](mailto:hello@interchain.berlin) 或 [加入disscoed](https://discord.gg/AzefAFd).
 
-## Security
+## 安全性
 
-To report a security vulnerability, see our [bug bounty
-program](https://hackerone.com/tendermint). 
-For examples of the kinds of bugs we're looking for, see [our security policy](SECURITY.md)
+报告安全漏洞, 看看 [漏洞奖励程序](https://hackerone.com/tendermint). 
+有关我们正在寻找的bug错误的示例，请参阅 [我们的安全政策](SECURITY.md)
 
-We also maintain a dedicated mailing list for security updates. We will only ever use this mailing list
-to notify you of vulnerabilities and fixes in Tendermint Core. You can subscribe [here](http://eepurl.com/gZ5hQD).
+我们还维护一个专门的安全更新邮件列表。我们只会使用这个邮件列表去
+通知您 Tendermint Core 中的漏洞和修复。你可以订阅[这里](http://eepurl.com/gZ5hQD).
 
-## Minimum requirements
+## 最低要求
 
 | Requirement | Notes            |
 | ----------- | ---------------- |
-| Go version  | Go1.15 or higher |
+| Go 版本  | Go1.15 or higher |
 
 ## Documentation
 
-Complete documentation can be found on the [website](https://docs.tendermint.com/master/).
+完整的文档可以在 [这里] (https://docs.tendermint.com/master/) 找到.
 
-### Install
+### 安装
 
-See the [install instructions](/docs/introduction/install.md).
+请参阅[安装说明](/docs/introduction/install.md).
 
-### Quick Start
+### 快速开始
 
-- [Single node](/docs/introduction/quick-start.md)
-- [Local cluster using docker-compose](/docs/networks/docker-compose.md)
-- [Remote cluster using Terraform and Ansible](/docs/networks/terraform-and-ansible.md)
-- [Join the Cosmos testnet](https://cosmos.network/testnet)
+- [单节点](/docs/introduction/quick-start.md)
+- [使用 docker-compose 的本地集群](/docs/networks/docker-compose.md)
+- [使用 Terraform 和 Ansible 的远程集群](/docs/networks/terraform-and-ansible.md)
+- [加入 Cosmos 测试网](https://cosmos.network/testnet)
 
-## Contributing
+## 贡献
 
-Please abide by the [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
+请在所有互动中遵守[行为准则](CODE_OF_CONDUCT.md)。
 
-Before contributing to the project, please take a look at the [contributing guidelines](CONTRIBUTING.md)
-and the [style guide](STYLE_GUIDE.md). You may also find it helpful to read the
-[specifications](https://github.com/tendermint/spec), watch the [Developer Sessions](/docs/DEV_SESSIONS.md), 
-and familiarize yourself with our
-[Architectural Decision Records](https://github.com/tendermint/tendermint/tree/master/docs/architecture).
+在为项目做出贡献之前，请查看 [贡献指南](CONTRIBUTING.md)
+和 [风格指南](STYLE_GUIDE.md). 
+还有[规格](https://github.com/tendermint/spec), 观看 [开发者会议](/docs/DEV_SESSIONS.md), 
+并熟悉我们的[架构决策记录](https://github.com/tendermint/tendermint/tree/master/docs/architecture).
 
-## Versioning
+## 版本控制
 
-### Semantic Versioning
+### 语义版本控制
 
-Tendermint uses [Semantic Versioning](http://semver.org/) to determine when and how the version changes.
-According to SemVer, anything in the public API can change at any time before version 1.0.0
+Tendermint 使用 [语义版本控制](http://semver.org/) 来确定版本何时以及如何更改。
+根据 SemVer，公共 API 中的任何内容都可以在 1.0.0 版本之前随时更改
 
-To provide some stability to Tendermint users in these 0.X.X days, the MINOR version is used
-to signal breaking changes across a subset of the total public API. This subset includes all
-interfaces exposed to other processes (cli, rpc, p2p, etc.), but does not
-include the Go APIs.
+在这 0.X.X 天内为 Tendermint 用户提供一些稳定性, 使用次要版本
+在整个公共 API 的一个子集中发出重大更改信号。这个子集包括所有
+暴露给其他进程（cli、rpc、p2p 等）的接口，但不
+包括 Go API。
 
-That said, breaking changes in the following packages will be documented in the
-CHANGELOG even if they don't lead to MINOR version bumps:
+也就是说，以下包中的重大更改将记录在
+CHANGELOG 即使它们不会导致次要版本变动：
 
 - crypto
 - config
@@ -114,48 +112,44 @@ CHANGELOG even if they don't lead to MINOR version bumps:
 - rpc/client
 - types
 
-### Upgrades
+### 升级
+为了避免在 1.0.0 之前积累技术债务，
+我们不保证重大更改（即次要版本中的颠簸）
+将与现有的 Tendermint 区块链一起使用。在这些情况下，您将
+必须启动一个新的区块链，或者编写一些自定义的东西来获取旧的
+数据进入新链。但是，补丁版本中的任何不同都应该是
+与现有的区块链历史兼容。
+有关升级的更多信息，请参阅 [UPGRADING.md](./UPGRADING.md)。
 
-In an effort to avoid accumulating technical debt prior to 1.0.0,
-we do not guarantee that breaking changes (ie. bumps in the MINOR version)
-will work with existing Tendermint blockchains. In these cases you will
-have to start a new blockchain, or write something custom to get the old
-data into the new chain. However, any bump in the PATCH version should be 
-compatible with existing blockchain histories.
+### 支持的版本
 
+因为我们是一个小型核心团队，所以我们只发布补丁更新，包括安全更新，
+到最近的次要版本和第二次最近的次要版本。最后，
+我们强烈建议让 Tendermint 保持最新。可以找到升级说明
+在 [UPGRADING.md](./UPGRADING.md) 中。
 
-For more information on upgrading, see [UPGRADING.md](./UPGRADING.md).
-
-### Supported Versions
-
-Because we are a small core team, we only ship patch updates, including security updates,
-to the most recent minor release and the second-most recent minor release. Consequently,
-we strongly recommend keeping Tendermint up-to-date. Upgrading instructions can be found
-in [UPGRADING.md](./UPGRADING.md).
-
-## Resources
+## 资源
 
 ### Tendermint Core
 
-For details about the blockchain data structures and the p2p protocols, see the
+有关区块链数据结构和 p2p 协议的详细信息, 查看
 [Tendermint specification](https://docs.tendermint.com/master/spec/).
 
-For details on using the software, see the [documentation](/docs/) which is also
-hosted at: <https://docs.tendermint.com/master/>
+有关使用该软件的详细信息，请参阅 [文档](/docs/)，它也是
+在: <https://docs.tendermint.com/master/>
 
-### Tools
+### 工具
 
-Benchmarking is provided by [`tm-load-test`](https://github.com/informalsystems/tm-load-test).
-Additional tooling can be found in [/docs/tools](/docs/tools).
+基准测试由 [`tm-load-test`](https://github.com/informalsystems/tm-load-test).
+其他工具可以在[/docs/tools](/docs/tools).
 
-### Applications
+### 应用程序
 
 - [Cosmos SDK](http://github.com/cosmos/cosmos-sdk); a cryptocurrency application framework
 - [Ethermint](http://github.com/cosmos/ethermint); Ethereum on Tendermint
 - [Many more](https://tendermint.com/ecosystem)
 
-### Research
-
+### 继续研究
 - [The latest gossip on BFT consensus](https://arxiv.org/abs/1807.04938)
 - [Master's Thesis on Tendermint](https://atrium.lib.uoguelph.ca/xmlui/handle/10214/9769)
 - [Original Whitepaper: "Tendermint: Consensus Without Mining"](https://tendermint.com/static/docs/tendermint.pdf)
