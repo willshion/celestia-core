@@ -5,7 +5,7 @@
 [拜占庭容错](https://en.wikipedia.org/wiki/Byzantine_fault_tolerance)
 [状态机](https://en.wikipedia.org/wiki/State_machine_replication).
 或者 [区块链](<https://en.wikipedia.org/wiki/Blockchain_(database)>), 简单点.
-[中文版 点我](<https://en.wikipedia.org/wiki/Blockchain_(database)>).
+
 
 [![version](https://img.shields.io/github/tag/tendermint/tendermint.svg)](https://github.com/tendermint/tendermint/releases/latest)
 [![API Reference](https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667)](https://pkg.go.dev/github.com/tendermint/tendermint)
